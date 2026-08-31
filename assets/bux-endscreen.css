@@ -1,0 +1,53 @@
+/* ============================================================
+   BOX UNIVERSE — END SCREEN VISUAL SWAP  (bux-endscreen.css)
+   ------------------------------------------------------------
+   The shipped end screen art (design/end.png, 1790x878) has been
+   replaced with the new artwork (1672x941). The React bundle writes
+   `--ratio: 1790/878` inline on .end-screen, so the frame has to be
+   re-fitted here; an !important author declaration outranks an inline
+   declaration that carries no !important, which lets us re-fit the
+   frame without touching assets/app.js.
+
+   Nothing else about the section changes: the section still holds the
+   same copy, the same BACK TO TOP link and the same DOM order.
+   ============================================================ */
+
+/* ---------- 1. Re-fit the frame to the new artwork ---------- */
+.end-screen {
+  --ratio: 1672 / 941 !important;
+  aspect-ratio: 1672 / 941 !important;
+}
+
+/* The base image is object-fit:contain; with the ratio now matching the
+   asset exactly there is no letterboxing and no crop. */
+
+/* ---------- 2. Retire the overlay decorations ----------
+   .end-hearts / .end-dots / .end-corner are aria-hidden="true"
+   ornaments (♥ ♥ ♥, …, ✦ ☠) authored for the previous composition.
+   The new artwork carries its own sparkles and character, so leaving
+   these on top would paint foreign ornaments over the new design.
+   They hold no information, so hiding them changes nothing but looks. */
+.end-screen .end-decor {
+  display: none !important;
+}
+
+/* ---------- 3. Keep the sign-off line, stop drawing it twice ----------
+   The new artwork already renders "宇宙暂时加载完毕，脑洞仍在后台运行……"
+   as part of the image. The live <p class="end-copy"> carries the same
+   sentence, so it is kept in the DOM verbatim for screen readers, search
+   engines and text selection, but visually hidden to avoid a double
+   print over the artwork. The text itself is untouched. */
+.end-screen .end-copy {
+  display: none !important;
+}
+
+/* ---------- 4. BACK TO TOP stays exactly as shipped ----------
+   .back-top is the transparent full-bleed "return to the top" target
+   (z-index 3, inset 0). It is deliberately left untouched so the
+   section keeps its original interaction. */
+
+/* artwork must fill the frame edge to edge */
+.end-screen .art-base {
+  object-fit: cover !important;
+  object-position: center center !important;
+}

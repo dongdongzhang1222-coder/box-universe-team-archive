@@ -1,0 +1,259 @@
+/* ============================================================
+   BOX UNIVERSE — MOTION OVERLAY (additive layer)
+   All selectors are new (prefix `bux-`) or target only properties
+   the original stylesheet does not animate. Nothing here changes
+   layout, copy, colour tokens or component geometry.
+   ============================================================ */
+
+/* ---------- 0. Atmosphere host (appended to <body>, never inside React DOM) ---------- */
+.bux-fx {
+  position: fixed;
+  inset: 0;
+  z-index: 79; /* under .grain (80) and .modal (90), above .top-nav (72) content wash */
+  pointer-events: none;
+  contain: strict;
+}
+
+/* soft light that follows the cursor */
+.bux-cursor-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 460px;
+  height: 460px;
+  margin: -230px 0 0 -230px;
+  border-radius: 50%;
+  opacity: 0;
+  mix-blend-mode: screen;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(233, 161, 200, 0.28) 32%,
+    rgba(80, 103, 220, 0.14) 58%,
+    rgba(80, 103, 220, 0) 72%
+  );
+  will-change: transform, opacity;
+}
+
+/* diagonal sheen that drifts across the whole page as you scroll */
+.bux-beam {
+  position: absolute;
+  top: -30%;
+  left: -40%;
+  width: 42%;
+  height: 170%;
+  opacity: 0.5;
+  mix-blend-mode: screen;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.17) 44%,
+    rgba(246, 182, 215, 0.2) 52%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  filter: blur(14px);
+  will-change: transform;
+}
+
+/* edge vignette — deepens with scroll velocity */
+.bux-vignette {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(
+    120% 92% at 50% 50%,
+    rgba(9, 16, 48, 0) 52%,
+    rgba(9, 16, 48, 0.34) 100%
+  );
+  will-change: opacity;
+}
+
+/* drifting dust motes */
+.bux-mote {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.85);
+  will-change: transform, opacity;
+}
+
+/* thin scroll progress rail, pinned to the very top edge */
+.bux-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 81;
+  pointer-events: none;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, #4358c9 0%, #7086e4 45%, #e9a1c8 100%);
+  will-change: transform;
+}
+
+/* ---------- 1. Sweep highlight on the primary video CTA ---------- */
+.bux-sheen {
+  position: relative;
+  overflow: hidden;
+}
+.bux-sheen::after {
+  content: "";
+  position: absolute;
+  top: -60%;
+  left: -140%;
+  width: 55%;
+  height: 220%;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.62) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-18deg);
+  animation: buxSheen 3.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes buxSheen {
+  0%,
+  62% {
+    left: -140%;
+  }
+  92%,
+  100% {
+    left: 190%;
+  }
+}
+
+/* ---------- 2. Breathing halo for small ambient hotspots ----------
+   Only box-shadow is touched, so the original :hover outline and any
+   transform-based behaviour stay exactly as authored. */
+.bux-halo {
+  animation: buxHalo 2.9s ease-in-out infinite;
+  border-radius: 6px;
+}
+@keyframes buxHalo {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.5), 0 0 0 0 rgba(233, 161, 200, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0), 0 0 22px 5px rgba(233, 161, 200, 0.55);
+  }
+}
+
+/* ---------- 3. Depth hint for the case cards while tilting ---------- */
+.bux-tilt-host {
+  transform-style: preserve-3d;
+  perspective: 900px;
+}
+
+/* ---------- 4. Per-artwork atmosphere ----------
+   Sits above the full-bleed design image at z-index 1 and never
+   receives pointer events. The original stylesheet already stacks
+   every hotspot container (.player-hotspots / .case-hotspots /
+   .knowledge-hotspots / .joy-hotspots) at z-index 3-4, so hit
+   targets stay above this wash and pixel-identical to the original
+   build. No hotspot geometry is redeclared here on purpose. */
+.bux-screen-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.bux-screen-sweep {
+  position: absolute;
+  top: -25%;
+  left: -60%;
+  width: 34%;
+  height: 150%;
+  opacity: 0.75;
+  mix-blend-mode: screen;
+  background: linear-gradient(
+    104deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.22) 46%,
+    rgba(246, 182, 215, 0.22) 55%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  filter: blur(10px);
+  will-change: transform;
+}
+
+.bux-screen-bloom {
+  position: absolute;
+  inset: -10%;
+  opacity: 0;
+  mix-blend-mode: screen;
+  background: radial-gradient(
+    62% 52% at 50% 44%,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(157, 170, 240, 0.16) 46%,
+    rgba(157, 170, 240, 0) 78%
+  );
+  will-change: opacity;
+}
+
+/* ---------- 5. PRESS START gate ----------
+   Decoration only. The gate artwork and the transparent .start-hit
+   button are never transformed, so the hit box keeps its geometry. */
+.bux-gate-fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bux-gate-aurora {
+  position: absolute;
+  top: -20%;
+  left: -55%;
+  width: 46%;
+  height: 140%;
+  mix-blend-mode: screen;
+  opacity: 0.55;
+  background: linear-gradient(
+    102deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 45%,
+    rgba(246, 182, 215, 0.26) 56%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  filter: blur(18px);
+  will-change: transform;
+}
+
+.bux-gate-ring {
+  position: absolute;
+  border-radius: 999px;
+  opacity: 0;
+  mix-blend-mode: screen;
+  box-shadow: 0 0 34px 10px rgba(255, 255, 255, 0.42),
+    0 0 60px 20px rgba(233, 161, 200, 0.4);
+  will-change: transform, opacity;
+}
+
+/* ---------- 6. Reduced motion: hand everything back ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .bux-fx,
+  .bux-progress,
+  .bux-screen-fx,
+  .bux-gate-fx {
+    display: none !important;
+  }
+  .bux-sheen::after,
+  .bux-halo {
+    animation: none !important;
+  }
+  .bux-halo {
+    box-shadow: none !important;
+  }
+}
