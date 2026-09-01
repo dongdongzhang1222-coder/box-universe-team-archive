@@ -10,14 +10,42 @@
   if (params.get('ui') === 'off') return;
 
   var REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var TEAM_VIDEO = './media/team-16th.mp4';
-  var COLLAGE_VIDEO = './media/team-loop.mp4';
-  var PINNED = {
-    name: '周年AI视频',
-    format: 'MP4',
-    size: '47.4 MiB',
-    note: '团队 16 周年存档 · 常驻'
-  };
+  var BOX_ARCHIVE_VIDEO = './media/box-intro-hd.mp4';
+  var COLLAGE_VIDEO = './media/team-collage-motion.mp4';
+  var DEFAULT_IDEA_ITEMS = [
+    {
+      id: 'ai-anniversary',
+      kind: 'video',
+      parts: [
+        './assets/idea-bank/ai-anniversary.part-00',
+        './assets/idea-bank/ai-anniversary.part-01',
+        './assets/idea-bank/ai-anniversary.part-02',
+        './assets/idea-bank/ai-anniversary.part-03'
+      ],
+      name: 'AI周年视频',
+      format: 'MP4',
+      size: '47.4 MiB',
+      note: '团队 16 周年存档 · 常驻'
+    },
+    {
+      id: 'ai-website-handbook',
+      kind: 'docx',
+      src: './assets/idea-bank/ai-website-handbook.docx',
+      name: 'AI从零建站·淘宝品牌分享手册',
+      format: 'DOCX',
+      size: '116.7 KiB',
+      note: 'AI 建站流程与工具对比 · Word 手册 · 常驻'
+    },
+    {
+      id: 'hot-dance',
+      kind: 'video',
+      src: './media/box-signal.mp4',
+      name: '火辣热舞',
+      format: 'MP4',
+      size: '3.5 MiB',
+      note: '团队热舞影像 · 常驻'
+    }
+  ];
 
   /* ---------- tiny helpers ---------- */
   function el(tag, cls, text) {
@@ -29,6 +57,99 @@
   function q(sel, root) { return (root || document).querySelector(sel); }
   function qa(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
   function lenis() { return window.lenis && typeof window.lenis.stop === 'function' ? window.lenis : null; }
+
+  function setupEntryButton() {
+    var btn = q('.entry-page .start-hit');
+    if (!btn || btn.dataset.buxEntryFx) return;
+    btn.dataset.buxEntryFx = '1';
+
+    // The artwork uses object-fit, so percentage coordinates against the
+    // viewport drift whenever its aspect ratio differs from the source image.
+    // Anchor the hit target to the button's actual pixels in entry.png instead.
+    var gate = btn.parentElement;
+    var artwork = gate && q(':scope > img', gate);
+    var sourceButton = { x: 535, y: 318, width: 610, height: 90 };
+
+    function syncEntryHitbox() {
+      if (!gate || !artwork || !artwork.naturalWidth || !artwork.naturalHeight) return;
+      var boxWidth = artwork.clientWidth;
+      var boxHeight = artwork.clientHeight;
+      var fit = getComputedStyle(artwork).objectFit;
+      var scale = fit === 'cover'
+        ? Math.max(boxWidth / artwork.naturalWidth, boxHeight / artwork.naturalHeight)
+        : Math.min(boxWidth / artwork.naturalWidth, boxHeight / artwork.naturalHeight);
+      var renderedWidth = artwork.naturalWidth * scale;
+      var renderedHeight = artwork.naturalHeight * scale;
+      var offsetX = (boxWidth - renderedWidth) / 2;
+      var offsetY = (boxHeight - renderedHeight) / 2;
+
+      btn.style.left = (offsetX + sourceButton.x * scale) + 'px';
+      btn.style.top = (offsetY + sourceButton.y * scale) + 'px';
+      btn.style.width = (sourceButton.width * scale) + 'px';
+      btn.style.height = (sourceButton.height * scale) + 'px';
+    }
+
+    if (artwork) {
+      if (artwork.complete) syncEntryHitbox();
+      else artwork.addEventListener('load', syncEntryHitbox, { once: true });
+      window.addEventListener('resize', syncEntryHitbox);
+      if (typeof ResizeObserver === 'function') {
+        new ResizeObserver(syncEntryHitbox).observe(gate);
+      }
+    }
+
+    btn.addEventListener('pointerdown', function () {
+      btn.classList.add('is-bux-pressed');
+    });
+    btn.addEventListener('pointerup', function () {
+      if (btn.dataset.buxPass !== '1') btn.classList.remove('is-bux-pressed');
+    });
+    btn.addEventListener('pointerleave', function () {
+      if (btn.dataset.buxPass !== '1') btn.classList.remove('is-bux-pressed');
+    });
+    btn.addEventListener('click', function (event) {
+      if (btn.dataset.buxPass === '1') {
+        delete btn.dataset.buxPass;
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      btn.classList.add('is-bux-pressed');
+      setTimeout(function () {
+        if (!btn.isConnected) return;
+        btn.dataset.buxPass = '1';
+        btn.click();
+      }, 320);
+    });
+  }
+
+  function loadIdeaVideo(video, item) {
+    if (!item.parts) {
+      video.src = item.src;
+      return;
+    }
+    video.setAttribute('data-bux-loading', '1');
+    var parts = [];
+    item.parts.reduce(function (chain, path) {
+      return chain.then(function () {
+        return fetch(path).then(function (response) {
+          if (!response.ok) throw new Error('Missing video segment: ' + path);
+          return response.arrayBuffer();
+        }).then(function (bytes) {
+          parts.push(bytes);
+        });
+      });
+    }, Promise.resolve()).then(function () {
+      if (!video.isConnected) return;
+      video.src = URL.createObjectURL(new Blob(parts, { type: 'video/mp4' }));
+      video.removeAttribute('data-bux-loading');
+      video.load();
+    }).catch(function () {
+      video.removeAttribute('data-bux-loading');
+      video.setAttribute('data-bux-media-error', '1');
+      video.setAttribute('aria-label', item.name + ' 加载失败');
+    });
+  }
 
   /* ============================================================
      1. CASEBOARD — 「查看详情」+ lightbox
@@ -338,45 +459,71 @@
     });
   }
 
-  function buildPinnedCard() {
+  function buildDefaultIdeaCards() {
     var wrap = q('.idea-bank .idea-cards');
-    if (!wrap || wrap.querySelector('.bux-idea-card')) return;
+    if (!wrap) return;
 
-    var card = el('article', 'idea-card bux-idea-card');
+    DEFAULT_IDEA_ITEMS.slice().reverse().forEach(function (item) {
+      if (wrap.querySelector('[data-bux-default="' + item.id + '"]')) return;
 
-    var v = el('video');
-    v.src = TEAM_VIDEO;
-    v.controls = true;
-    v.playsInline = true;
-    v.preload = 'metadata';
-    v.setAttribute('controlsList', 'nodownload noplaybackrate');
-    v.setAttribute('aria-label', PINNED.name + ' 视频预览');
+      var card = el('article', 'idea-card bux-idea-card bux-idea-' + item.kind);
+      card.setAttribute('data-bux-default', item.id);
 
-    var meta = el('div', 'idea-meta');
-    var fmt = el('span', null, PINNED.format);
-    var pin = el('i', 'bux-idea-pin', 'PINNED');
-    fmt.appendChild(pin);
-    var h3 = el('h3', null, PINNED.name);
-    h3.title = PINNED.name + '　' + PINNED.note;
-    var p = el('p', null, PINNED.size + '　·　' + PINNED.note);
+      var media;
+      if (item.kind === 'video') {
+        media = el('video');
+        media.controls = true;
+        media.playsInline = true;
+        media.preload = 'metadata';
+        media.setAttribute('controlsList', 'nodownload noplaybackrate');
+        media.setAttribute('aria-label', item.name + ' 视频预览');
+        loadIdeaVideo(media, item);
+      } else {
+        media = el('a', 'file-icon bux-doc-preview', item.format);
+        media.href = item.src;
+        media.target = '_blank';
+        media.rel = 'noreferrer';
+        media.setAttribute('aria-label', '打开' + item.name);
+      }
 
-    var row = el('div');
-    var fs = el('button', 'bux-idea-fs', '全屏播放');
-    fs.type = 'button';
-    fs.addEventListener('click', function () {
-      var r = v.requestFullscreen || v.webkitRequestFullscreen || v.webkitEnterFullscreen;
-      if (r) { try { r.call(v); } catch (_) {} }
-      v.play().catch(function () {});
+      var meta = el('div', 'idea-meta');
+      var fmt = el('span', null, item.format);
+      var pin = el('i', 'bux-idea-pin', 'PINNED');
+      fmt.appendChild(pin);
+      var h3 = el('h3', null, item.name);
+      h3.title = item.name + '　' + item.note;
+      var p = el('p', null, item.size + '　·　' + item.note);
+
+      var row = el('div');
+      if (item.kind === 'video') {
+        var fs = el('button', 'bux-idea-fs', '全屏播放');
+        fs.type = 'button';
+        fs.addEventListener('click', function () {
+          var r = media.requestFullscreen || media.webkitRequestFullscreen || media.webkitEnterFullscreen;
+          if (r) { try { r.call(media); } catch (_) {} }
+          media.play().catch(function () {});
+        });
+        row.appendChild(fs);
+      } else {
+        var open = el('a', 'bux-idea-open', '打开文档');
+        open.href = item.src;
+        open.target = '_blank';
+        open.rel = 'noreferrer';
+        var download = el('a', 'bux-idea-download', '下载 ' + item.format);
+        download.href = item.src;
+        download.download = 'AI从零建站-淘宝品牌分享手册.docx';
+        row.appendChild(open);
+        row.appendChild(download);
+      }
+
+      meta.appendChild(fmt);
+      meta.appendChild(h3);
+      meta.appendChild(p);
+      meta.appendChild(row);
+      card.appendChild(media);
+      card.appendChild(meta);
+      wrap.insertBefore(card, wrap.firstChild);
     });
-    row.appendChild(fs);
-
-    meta.appendChild(fmt);
-    meta.appendChild(h3);
-    meta.appendChild(p);
-    meta.appendChild(row);
-    card.appendChild(v);
-    card.appendChild(meta);
-    wrap.insertBefore(card, wrap.firstChild);
   }
 
   function syncIdeaCount() {
@@ -390,7 +537,41 @@
   }
 
   /* ============================================================
-     7. TEAM COLLAGE — one video instead of 7 static portraits
+     7. BOX ARCHIVE — 5-second motion portrait
+     ============================================================ */
+  function buildBoxArchiveVideo() {
+    var sec = q('.box-screen');
+    if (!sec || sec.querySelector('.bux-box-archive-video')) return;
+    var v = el('video', 'bux-box-archive-video');
+    v.src = BOX_ARCHIVE_VIDEO;
+    v.autoplay = true;
+    v.muted = true;
+    v.defaultMuted = true;
+    v.loop = true;
+    v.playsInline = true;
+    v.setAttribute('muted', '');
+    v.setAttribute('playsinline', '');
+    v.setAttribute('aria-label', 'BOX 档案动态影像');
+    v.poster = './design/box.png';
+    v.preload = 'auto';
+    sec.appendChild(v);
+    sec.classList.add('bux-has-archive-video');
+    var kick = function () { v.play().catch(function () {}); };
+    kick();
+    v.addEventListener('loadeddata', kick, { once: true });
+    document.addEventListener('click', kick, { once: true });
+    if (typeof IntersectionObserver === 'function') {
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) kick();
+          else if (!v.paused) v.pause();
+        });
+      }, { rootMargin: '200px 0px' }).observe(sec);
+    }
+  }
+
+  /* ============================================================
+     8. TEAM COLLAGE — one video instead of 7 static portraits
      ============================================================ */
   function buildCollageVideo() {
     if (REDUCED) return;                          // reduced motion keeps the stills
@@ -432,13 +613,15 @@
      ============================================================ */
   var raf = 0;
   function sync() {
+    setupEntryButton();
     decorateCaseCards();
     decorateModal();
     syncJoyActive();
     decorateVideo();
-    buildPinnedCard();
+    buildDefaultIdeaCards();
     addDeleteButtons();
     syncIdeaCount();
+    buildBoxArchiveVideo();
     buildCollageVideo();
   }
   function schedule() {

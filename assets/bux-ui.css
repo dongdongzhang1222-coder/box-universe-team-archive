@@ -401,6 +401,41 @@
   background: #091524;
   border: 1px solid #5268d4;
 }
+.bux-doc-preview {
+  position: relative;
+  display: grid !important;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  place-items: center;
+  overflow: hidden;
+  font: 900 clamp(40px, 6vw, 76px) var(--pixel);
+  letter-spacing: .08em;
+  color: #fff;
+  text-decoration: none;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.16) 0 16%, transparent 16% 100%),
+    repeating-linear-gradient(0deg, transparent 0 22px, rgba(255,255,255,.08) 22px 23px),
+    linear-gradient(145deg, #e55da9, #6877e8 58%, #394fc7);
+  border: 1px solid #5268d4;
+}
+.bux-doc-preview::before {
+  content: 'TEAM HANDBOOK';
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  font: 900 9px var(--pixel);
+  letter-spacing: .12em;
+  color: rgba(255,255,255,.82);
+}
+.bux-doc-preview::after {
+  content: '↗';
+  position: absolute;
+  right: 18px;
+  bottom: 14px;
+  font: 900 24px var(--pixel);
+  color: #fff;
+}
+.bux-doc-preview:hover { filter: brightness(1.06); }
 .bux-idea-card .idea-meta > span { color: #b5379a; }
 .bux-idea-pin {
   display: inline-block;
@@ -423,6 +458,22 @@
   cursor: pointer;
 }
 .bux-idea-fs:hover { background: #4358c9; color: #fff; }
+.bux-idea-open,
+.bux-idea-download {
+  flex: 1;
+  padding: 7px 4px;
+  font: 900 9px var(--pixel);
+  color: #24348e;
+  text-align: center;
+  text-decoration: none;
+  background: #fff;
+  border: 1px solid #4358c9;
+  cursor: pointer;
+}
+.bux-idea-open:hover,
+.bux-idea-download:hover { background: #4358c9; color: #fff; }
+.bux-idea-open:focus-visible,
+.bux-idea-download:focus-visible { outline: 2px solid #17276e; outline-offset: 1px; }
 
 .bux-idea-del {
   flex: 0 0 auto;
@@ -473,7 +524,78 @@
 .bux-undo button:hover { background: #fff; }
 
 /* ------------------------------------------------------------
-   7. TEAM COLLAGE — video replaces the 7 static portraits
+   7. BOX ARCHIVE — high-resolution motion replaces artwork
+   ------------------------------------------------------------ */
+.box-screen.bux-has-archive-video > .art-base { opacity: 0; }
+.bux-box-archive-video {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: auto;
+  backface-visibility: hidden;
+  filter: contrast(1.025) saturate(1.015);
+  pointer-events: none;
+  background: #b9c5f4;
+}
+
+/* ------------------------------------------------------------
+   ENTRY — artwork-aligned, borderless pixel-button interaction
+   ------------------------------------------------------------ */
+.entry-page .start-hit {
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 0;
+  background: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  filter: none !important;
+  box-shadow: none !important;
+  animation: none !important;
+  clip-path: polygon(4% 0, 96% 0, 100% 25%, 100% 75%, 96% 100%, 4% 100%, 0 75%, 0 25%);
+  transition: transform .12s steps(2, end), background-color .12s linear;
+  transform-origin: 50% 62%;
+}
+.entry-page .start-hit::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 22%, rgba(255,255,255,.42) 48%, transparent 72%);
+  opacity: 0;
+  transform: translateX(-105%);
+}
+.entry-page .start-hit:hover,
+.entry-page .start-hit:focus-visible {
+  background: rgba(255, 255, 255, .13) !important;
+  outline: 0 !important;
+  filter: none !important;
+  box-shadow: inset 0 0 0 3px rgba(255,255,255,.22) !important;
+}
+.entry-page .start-hit:hover::before,
+.entry-page .start-hit:focus-visible::before {
+  opacity: 1;
+  animation: bux-entry-sheen .85s steps(6, end) both;
+}
+.entry-page .start-hit.is-bux-pressed {
+  animation: none;
+  transform: translateY(3px) scale(.985);
+  background: rgba(38, 47, 145, .3) !important;
+  border: 0 !important;
+  box-shadow: inset 0 7px 0 rgba(28, 38, 126, .18), inset 0 -2px 0 rgba(255,255,255,.18) !important;
+}
+@keyframes bux-entry-sheen {
+  from { transform: translateX(-105%); }
+  to { transform: translateX(105%); }
+}
+
+/* Retire the old rectangular pulse from the motion overlay. */
+.entry-page .bux-gate-ring { display: none !important; }
+
+/* ------------------------------------------------------------
+   8. TEAM COLLAGE — video replaces the 7 static portraits
    ------------------------------------------------------------ */
 .team-collage.bux-has-video .collage-base,
 .team-collage.bux-has-video .collage-layer { display: none !important; }
@@ -490,5 +612,6 @@
 .team-collage .collage-label { z-index: 3; }
 
 @media (prefers-reduced-motion: reduce) {
-  .bux-scroll-hint { animation: none; }
+  .bux-scroll-hint,
+  .entry-page .start-hit { animation: none; }
 }
