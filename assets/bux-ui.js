@@ -58,6 +58,22 @@
   function qa(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
   function lenis() { return window.lenis && typeof window.lenis.stop === 'function' ? window.lenis : null; }
 
+  function syncPlayerHeading() {
+    var section = q('#players');
+    if (!section) return;
+    var galaxyTitle = q('.galaxy-copy h2', section);
+    if (galaxyTitle && galaxyTitle.textContent !== 'Interstellar Player') {
+      galaxyTitle.textContent = 'Interstellar Player';
+    }
+    var archiveHeading = section.previousElementSibling;
+    if (archiveHeading && archiveHeading.matches('.section-heading')) {
+      var archiveTitle = q('h2', archiveHeading);
+      if (archiveTitle && archiveTitle.textContent !== 'Interstellar Player') {
+        archiveTitle.textContent = 'Interstellar Player';
+      }
+    }
+  }
+
   function setupEntryButton() {
     var btn = q('.entry-page .start-hit');
     if (!btn || btn.dataset.buxEntryFx) return;
@@ -614,6 +630,7 @@
   var raf = 0;
   function sync() {
     setupEntryButton();
+    syncPlayerHeading();
     decorateCaseCards();
     decorateModal();
     syncJoyActive();

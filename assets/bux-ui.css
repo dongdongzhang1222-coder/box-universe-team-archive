@@ -194,18 +194,44 @@
    2. PLAYER DETAIL — unified portrait frame + real scrolling
    ------------------------------------------------------------ */
 .player-detail .modal-portrait {
+  display: grid !important;
   place-items: center !important;
   padding: clamp(14px, 2.2vw, 32px) !important;
 }
-/* every player renders inside an identical 3:4 frame -> same visual size */
+/* Let the image fill the left panel as a canvas, then contain and centre the
+   actual portrait inside it. This avoids top-cropping and off-centre faces. */
 .player-detail .modal-portrait img {
-  width: auto !important;
+  display: block !important;
+  width: 100% !important;
   height: 100% !important;
   max-width: 100% !important;
   max-height: 100% !important;
-  aspect-ratio: 3 / 4 !important;
+  aspect-ratio: auto !important;
   object-fit: contain !important;
   object-position: center center !important;
+}
+
+/* ------------------------------------------------------------
+   3. PLAYER ARCHIVE — a stable 3 × 2 roster and responsive type
+   ------------------------------------------------------------ */
+.galaxy-copy h2 {
+  font: 400 clamp(46px, 6vw, 86px)/.9 var(--title) !important;
+  letter-spacing: .01em;
+}
+.player-orbits {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: clamp(24px, 3.2vw, 46px) clamp(14px, 2.4vw, 30px) !important;
+  width: min(1120px, 100%);
+  margin-inline: auto;
+}
+.orbit-player {
+  width: 100%;
+  min-width: 0;
+  touch-action: manipulation;
+}
+.orbit-player strong,
+.orbit-player small {
+  overflow-wrap: anywhere;
 }
 
 .player-detail .modal-copy {
@@ -247,11 +273,75 @@
 }
 
 @media (width<=760px) {
-  .player-detail .modal-portrait { height: 40vh !important; }
+  html,
+  body,
+  #root {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+  img,
+  video { max-width: 100%; }
+  button,
+  a { touch-action: manipulation; }
+
+  .player-galaxy {
+    width: calc(100% - 12px) !important;
+    padding: 30px 10px 42px !important;
+  }
+  .galaxy-copy {
+    gap: 12px !important;
+    margin-bottom: 28px !important;
+    padding-inline: 4px;
+  }
+  .galaxy-copy h2 {
+    font-size: clamp(34px, 11vw, 54px) !important;
+    line-height: .94 !important;
+  }
+  .galaxy-copy span {
+    max-width: 34ch;
+    line-height: 1.6;
+  }
+  .player-orbits {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 22px 8px !important;
+  }
+  .orbit-frame {
+    padding: 4px !important;
+    box-shadow: 3px 4px #0f1e7061 !important;
+  }
+  .orbit-player strong {
+    font-size: clamp(8px, 2.5vw, 11px) !important;
+    line-height: 1.35;
+    white-space: normal;
+  }
+  .orbit-player small {
+    font-size: clamp(7px, 2vw, 9px) !important;
+    line-height: 1.35;
+    white-space: normal !important;
+  }
+
+  .player-detail .modal-portrait {
+    width: 100%;
+    height: 42svh !important;
+    min-height: 0 !important;
+    padding: 14px !important;
+  }
   .player-detail .modal-portrait img {
     height: 100% !important;
-    width: auto !important;
+    width: 100% !important;
     aspect-ratio: auto !important;
+    object-position: center center !important;
+  }
+  .player-detail .modal-copy {
+    padding: 24px 18px max(48px, env(safe-area-inset-bottom)) !important;
+    overflow-wrap: anywhere;
+  }
+  .player-detail .modal-copy h2 {
+    font-size: clamp(42px, 16vw, 68px) !important;
+  }
+  .player-detail .modal-close {
+    top: max(10px, env(safe-area-inset-top));
+    right: 10px;
   }
   .bux-scroll-hint { bottom: 10px; }
 }

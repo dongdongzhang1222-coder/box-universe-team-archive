@@ -19,9 +19,9 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 460px;
-  height: 460px;
-  margin: -230px 0 0 -230px;
+  width: 184px;
+  height: 184px;
+  margin: -92px 0 0 -92px;
   border-radius: 50%;
   opacity: 0;
   mix-blend-mode: screen;
@@ -33,6 +33,11 @@
     rgba(80, 103, 220, 0) 72%
   );
   will-change: transform, opacity;
+}
+
+/* Touch screens have no useful hover cursor and should not spend GPU time on it. */
+@media (hover: none), (pointer: coarse) {
+  .bux-cursor-glow { display: none !important; }
 }
 
 /* diagonal sheen that drifts across the whole page as you scroll */
