@@ -434,20 +434,6 @@
 }
 .bux-lb-close:hover { background: #efa6ce; color: #172c83; }
 
-.player-detail .modal-copy .bux-related-case {
-  display: grid;
-  gap: 5px;
-  border-color: #efa6ce;
-}
-.player-detail .modal-copy .bux-related-case span {
-  color: #101a52;
-  font-weight: 800;
-}
-.player-detail .modal-copy .bux-related-case small {
-  color: #53619d;
-  font: 800 8px var(--pixel);
-}
-
 /* ------------------------------------------------------------
    2. PLAYER DETAIL — unified portrait frame + real scrolling
    ------------------------------------------------------------ */

@@ -86,6 +86,7 @@
   var customCases = loadCustomCases();
   var caseEditor = null;
   var caseEditorResetting = false;
+  var joyImagePreloads = [];
 
   /* ---------- tiny helpers ---------- */
   function el(tag, cls, text) {
@@ -258,7 +259,7 @@
     caseEditor.preview.removeAttribute('src');
     caseEditor.preview.hidden = true;
     caseEditor.save.textContent = '保存并加入案例库';
-    caseEditor.status.textContent = '新增内容仅保存在当前浏览器；不会自动写入 GitHub。';
+    caseEditor.status.textContent = '填写项目资料，新增内容仅保存在当前浏览器。';
   }
 
   function editCustomCase(id) {
@@ -304,15 +305,16 @@
     var cases = q('#cases');
     var grid = cases && q('.case-grid', cases);
     if (!cases || !grid) return;
-    if (caseEditor && caseEditor.panel.isConnected) return;
+    if (caseEditor && caseEditor.panel.isConnected) {
+      if (!caseEditor.launcher || !caseEditor.launcher.isConnected) {
+        var replacementLauncher = createCaseLauncher();
+        grid.appendChild(replacementLauncher);
+        caseEditor.launcher = replacementLauncher;
+      }
+      return;
+    }
 
-    var launcher = el('button', 'case-card bux-case-editor-card');
-    launcher.type = 'button';
-    launcher.setAttribute('aria-label', '新增或编辑案例');
-    launcher.innerHTML =
-      '<span class="case-image"><i>＋</i><small>LOCAL EDITOR</small></span>' +
-      '<strong>＋</strong><h3>新增案例</h3><p>上传封面 / 编辑资料</p>' +
-      '<footer><time>YOUR TURN</time><span>打开编辑器 ↗</span></footer>';
+    var launcher = createCaseLauncher();
     grid.appendChild(launcher);
 
     var modal = el('div', 'bux-case-editor-modal');
@@ -329,15 +331,15 @@
       '<span>图片会自动压缩，并保存在当前浏览器中。</span></header>' +
       '<form class="bux-case-form">' +
       '<input type="hidden" name="caseId">' +
-      '<label><span>案例名称 *</span><input name="title" type="text" required maxlength="80" placeholder="输入案例名称"></label>' +
-      '<label><span>发布日期 *</span><input name="date" type="date" required></label>' +
-      '<label><span>项目链接</span><input name="url" type="url" placeholder="https://..."></label>' +
-      '<label><span>案例类型 *</span><input name="type" type="text" required maxlength="50" placeholder="例如：IP 联名 / 产品营销"></label>' +
-      '<fieldset><legend>人物归属</legend><div class="bux-member-checks"></div></fieldset>' +
-      '<label class="bux-case-file"><span>上传封面图</span><input name="image" type="file" accept="image/*"><small>支持 JPG / PNG / WEBP，新增案例时必选</small></label>' +
-      '<div class="bux-case-preview"><img alt="待上传案例封面预览" hidden></div>' +
+      '<label><span>项目名称 *</span><input name="title" type="text" required maxlength="80" placeholder="输入项目名称"></label>' +
+      '<label><span>项目时间 *</span><input name="date" type="date" required></label>' +
+      '<label><span>项目链接 *</span><input name="url" type="url" required placeholder="https://..."></label>' +
+      '<label><span>项目类型 *</span><input name="type" type="text" required maxlength="50" placeholder="例如：IP 联名 / 产品营销"></label>' +
+      '<fieldset><legend>归属项目人 *</legend><div class="bux-member-checks"></div></fieldset>' +
+      '<label class="bux-case-file"><span>点击上传项目图 *</span><input name="image" type="file" accept="image/*"><small>用于“查看详情”；支持 JPG / PNG / WEBP，新增案例时必选</small></label>' +
+      '<div class="bux-case-preview"><img alt="待上传项目图预览" hidden></div>' +
       '<div class="bux-case-form-actions"><button type="submit">保存并加入案例库</button><button type="reset">清空</button></div>' +
-      '<p class="bux-case-editor-status" role="status" aria-live="polite">新增内容仅保存在当前浏览器；不会自动写入 GitHub。</p>' +
+      '<p class="bux-case-editor-status" role="status" aria-live="polite">填写项目资料，新增内容仅保存在当前浏览器。</p>' +
       '</form>';
     modal.appendChild(panel);
     document.body.appendChild(modal);
@@ -377,10 +379,7 @@
       }
     };
 
-    launcher.addEventListener('click', function () {
-      resetCaseEditor();
-      caseEditor.open();
-    });
+    bindCaseLauncher();
     q('.bux-case-editor-close', panel).addEventListener('click', caseEditor.close);
     modal.addEventListener('mousedown', function (event) {
       if (event.target === modal) caseEditor.close();
@@ -403,8 +402,13 @@
       var id = form.elements.caseId.value;
       var existing = customCases.find(function (entry) { return entry.id === id; });
       var file = form.elements.image.files && form.elements.image.files[0];
+      var assignedMembers = qa('input[name="members"]:checked', form);
+      if (!assignedMembers.length) {
+        caseEditor.status.textContent = '请至少选择一位归属项目人。';
+        return;
+      }
       if (!existing && !file) {
-        caseEditor.status.textContent = '请先上传一张案例封面图。';
+        caseEditor.status.textContent = '请先点击上传一张项目图。';
         return;
       }
       caseEditor.save.disabled = true;
@@ -417,7 +421,7 @@
           date: displayDate(form.elements.date.value),
           url: form.elements.url.value.trim(),
           type: form.elements.type.value.trim(),
-          members: qa('input[name="members"]:checked', form).map(function (input) { return input.value; }),
+          members: assignedMembers.map(function (input) { return input.value; }),
           image: image,
           sortRank: 20,
           updatedAt: Date.now()
@@ -444,6 +448,31 @@
       event.stopPropagation();
       if (edit) editCustomCase(edit.dataset.buxCaseEdit);
       if (remove) deleteCustomCase(remove.dataset.buxCaseDelete, remove);
+    });
+  }
+
+  function createCaseLauncher() {
+    var launcher = el('button', 'case-card bux-case-editor-card');
+    launcher.type = 'button';
+    launcher.dataset.buxCaseLauncher = '1';
+    launcher.setAttribute('aria-label', '新增或编辑案例');
+    launcher.innerHTML =
+      '<span class="case-image"><i>＋</i><small>LOCAL EDITOR</small></span>' +
+      '<strong>＋</strong><h3>新增案例</h3><p>上传封面 / 编辑资料</p>' +
+      '<footer><time>YOUR TURN</time><span>打开编辑器 ↗</span></footer>';
+    return launcher;
+  }
+
+  function bindCaseLauncher() {
+    if (document.documentElement.dataset.buxCaseLauncherBound === '1') return;
+    document.documentElement.dataset.buxCaseLauncherBound = '1';
+    document.addEventListener('click', function (event) {
+      var launcher = event.target.closest('[data-bux-case-launcher]');
+      if (!launcher || !caseEditor) return;
+      event.preventDefault();
+      event.stopPropagation();
+      resetCaseEditor();
+      caseEditor.open();
     });
   }
 
@@ -670,17 +699,35 @@
       return /RELATED SAVE POINTS/.test(node.textContent || '');
     });
     if (!heading) return;
-    related.slice().reverse().forEach(function (item) {
+    var container = q('.modal-cases', copy);
+    if (!container) {
+      container = el('div', 'modal-cases');
+      heading.insertAdjacentElement('afterend', container);
+    }
+    related.forEach(function (item) {
       var link = el('a', 'bux-related-case');
       link.href = item.url || '#cases';
+      link.dataset.buxCaseDate = displayDate(item.date);
       if (item.url) {
         link.target = '_blank';
         link.rel = 'noreferrer';
       }
-      link.appendChild(el('span', null, item.title));
-      link.appendChild(el('small', null, displayDate(item.date) + ' · ' + (item.type || '自定义案例')));
-      heading.parentNode.insertBefore(link, heading.nextSibling);
+      var image = el('img');
+      image.src = item.image;
+      image.alt = '';
+      var text = el('span');
+      text.appendChild(el('b', null, item.title));
+      text.appendChild(el('small', null, displayDate(item.date) + '　' + (item.type || '自定义案例')));
+      link.appendChild(image);
+      link.appendChild(text);
+      link.appendChild(el('i', null, '↗'));
+      container.appendChild(link);
     });
+    qa(':scope > a', container).sort(function (a, b) {
+      var aDate = a.dataset.buxCaseDate || ((q('small', a) || {}).textContent || '');
+      var bDate = b.dataset.buxCaseDate || ((q('small', b) || {}).textContent || '');
+      return sortDate(bDate) - sortDate(aDate);
+    }).forEach(function (link) { container.appendChild(link); });
   }
 
   function decorateModal() {
@@ -749,6 +796,17 @@
       var on = i === idx ? '1' : null;
       if (on) { if (b.getAttribute('data-bux-active') !== '1') b.setAttribute('data-bux-active', '1'); }
       else if (b.hasAttribute('data-bux-active')) b.removeAttribute('data-bux-active');
+    });
+  }
+
+  function preloadJoyImages() {
+    if (joyImagePreloads.length) return;
+    ['./joy/xiaoyao-2years.jpg', './joy/team-building-2026.jpg'].forEach(function (src) {
+      var image = new Image();
+      image.decoding = 'async';
+      image.src = src;
+      joyImagePreloads.push(image);
+      if (typeof image.decode === 'function') image.decode().catch(function () {});
     });
   }
 
@@ -1055,6 +1113,7 @@
     decorateCaseCards();
     decorateModal();
     syncJoyActive();
+    preloadJoyImages();
     decorateVideo();
     buildDefaultIdeaCards();
     addDeleteButtons();
