@@ -208,7 +208,7 @@
       if (!card.dataset.buxSortRank) card.dataset.buxSortRank = String(100 + index);
     });
 
-    var cards = qa('.case-card', grid);
+    var cards = qa('.case-card:not(.bux-case-editor-card)', grid);
     var sorted = cards.slice().sort(function (a, b) {
       var dateDiff = sortDate(b.dataset.buxCaseDate) - sortDate(a.dataset.buxCaseDate);
       if (dateDiff) return dateDiff;
@@ -222,6 +222,8 @@
       var next = String(index + 1).padStart(2, '0');
       if (number && number.textContent !== next) number.textContent = next;
     });
+    var editorCard = q('.bux-case-editor-card', grid);
+    if (editorCard) grid.appendChild(editorCard);
   }
 
   function compressCaseImage(file) {
@@ -275,7 +277,7 @@
     caseEditor.preview.hidden = false;
     caseEditor.save.textContent = '更新这个案例';
     caseEditor.status.textContent = '正在编辑：' + item.title;
-    caseEditor.panel.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
+    caseEditor.open();
   }
 
   function deleteCustomCase(id, button) {
@@ -304,9 +306,24 @@
     if (!cases || !grid) return;
     if (caseEditor && caseEditor.panel.isConnected) return;
 
+    var launcher = el('button', 'case-card bux-case-editor-card');
+    launcher.type = 'button';
+    launcher.setAttribute('aria-label', '新增或编辑案例');
+    launcher.innerHTML =
+      '<span class="case-image"><i>＋</i><small>LOCAL EDITOR</small></span>' +
+      '<strong>＋</strong><h3>新增案例</h3><p>上传封面 / 编辑资料</p>' +
+      '<footer><time>YOUR TURN</time><span>打开编辑器 ↗</span></footer>';
+    grid.appendChild(launcher);
+
+    var modal = el('div', 'bux-case-editor-modal');
+    modal.hidden = true;
+    modal.setAttribute('aria-hidden', 'true');
     var panel = el('section', 'bux-case-editor');
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-modal', 'true');
     panel.setAttribute('aria-labelledby', 'bux-case-editor-title');
     panel.innerHTML =
+      '<button class="bux-case-editor-close" type="button" aria-label="关闭案例编辑器">×</button>' +
       '<header><div><p>＋ CASE CREATOR / LOCAL EDITOR</p>' +
       '<h3 id="bux-case-editor-title">编辑并上传新案例</h3></div>' +
       '<span>图片会自动压缩，并保存在当前浏览器中。</span></header>' +
@@ -322,7 +339,8 @@
       '<div class="bux-case-form-actions"><button type="submit">保存并加入案例库</button><button type="reset">清空</button></div>' +
       '<p class="bux-case-editor-status" role="status" aria-live="polite">新增内容仅保存在当前浏览器；不会自动写入 GitHub。</p>' +
       '</form>';
-    cases.insertBefore(panel, grid);
+    modal.appendChild(panel);
+    document.body.appendChild(modal);
 
     var form = q('form', panel);
     var checks = q('.bux-member-checks', panel);
@@ -337,12 +355,39 @@
       checks.appendChild(label);
     });
     caseEditor = {
+      launcher: launcher,
+      modal: modal,
       panel: panel,
       form: form,
       preview: q('.bux-case-preview img', panel),
       save: q('button[type="submit"]', panel),
-      status: q('.bux-case-editor-status', panel)
+      status: q('.bux-case-editor-status', panel),
+      open: function () {
+        modal.hidden = false;
+        modal.setAttribute('aria-hidden', 'false');
+        requestAnimationFrame(function () { modal.classList.add('is-open'); });
+        document.body.classList.add('bux-editor-open');
+        setTimeout(function () { form.elements.title.focus(); }, 80);
+      },
+      close: function () {
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('bux-editor-open');
+        setTimeout(function () { modal.hidden = true; }, 220);
+      }
     };
+
+    launcher.addEventListener('click', function () {
+      resetCaseEditor();
+      caseEditor.open();
+    });
+    q('.bux-case-editor-close', panel).addEventListener('click', caseEditor.close);
+    modal.addEventListener('mousedown', function (event) {
+      if (event.target === modal) caseEditor.close();
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && !modal.hidden) caseEditor.close();
+    });
 
     form.elements.image.addEventListener('change', function () {
       var file = form.elements.image.files && form.elements.image.files[0];
