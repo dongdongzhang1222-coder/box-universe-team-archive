@@ -11,7 +11,7 @@
 <body>
 <main class="shell">
   <header><div><p>BOX UNIVERSE / EDITABLE SAVE POINTS</p><h1>CASE ARCHIVE</h1></div><a href="https://dongdongzhang1222-coder.github.io/box-universe-team-archive/">返回团队网页 ↗</a></header>
-  <section class="editor" aria-labelledby="editor-title">
+  <section class="editor" id="editor" aria-labelledby="editor-title">
     <p class="eyebrow">＋ NEW SAVE POINT</p><h2 id="editor-title">新增 / 编辑案例</h2>
     <p class="editor-note">内容与上传图片只保存在当前浏览器。填写后点击保存；卡片可再次编辑或删除。</p>
     <form id="form"><input id="editId" type="hidden"><div class="form-grid">
@@ -21,7 +21,7 @@
       <label class="field wide"><span>案例类型</span><input id="type" placeholder="品牌营销 / 内容营销"></label>
       <div class="field wide"><span>归属玩家</span><div class="members" id="members"></div></div>
       <label class="field wide"><span>封面图片</span><div class="upload"><input id="image" type="file" accept="image/*"><img id="preview" class="preview" alt="封面预览"></div></label>
-    </div><div class="actions"><button class="save" type="submit">保存案例</button><button class="reset" type="button" id="reset">清空表单</button><span class="status" id="status" role="status"></span></div></form>
+    </div><div class="actions"><button class="save" type="submit">保存案例</button><button class="reset" type="button" id="resetBtn">清空表单</button><span class="status" id="status" role="status"></span></div></form>
   </section>
   <section class="grid" id="grid" aria-label="案例列表"></section>
 </main>
@@ -52,13 +52,13 @@ function write(){localStorage.setItem(KEY,JSON.stringify(custom))}
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function all(){return [...custom.map(x=>({...x,custom:true})),...BUILTIN].sort((a,b)=>b.date.localeCompare(a.date))}
 function render(){grid.innerHTML=all().map((x,i)=>`<article class="card"><img src="${x.image.startsWith('data:')?x.image:BASE+x.image}" alt="${esc(x.title)}"><div class="copy"><span class="num">${String(i+1).padStart(2,'0')}</span><h3>${esc(x.title)}</h3><p>${esc(x.type||'项目案例')}</p><div class="owner">归属：${(x.members||[]).map(m=>PEOPLE[m]).join('、')||'未指定'}</div><div class="meta"><time>${x.date.replaceAll('-','.')}</time><a class="open" href="${esc(x.url)}" target="_blank" rel="noreferrer">打开存档 ↗</a></div>${x.custom?`<div class="card-actions"><button onclick="editCase('${x.id}')">编辑</button><button class="danger" onclick="removeCase('${x.id}',this)">删除</button></div>`:''}</div></article>`).join('')}
-function clearForm(){form.reset();editId.value='';imageData='';preview.removeAttribute('src');status.textContent='';document.querySelectorAll('#members input').forEach(x=>x.checked=false)}
+function clearForm(){document.getElementById('form').reset();editId.value='';imageData='';preview.removeAttribute('src');document.getElementById('status').textContent='';document.querySelectorAll('#members input').forEach(x=>x.checked=false)}
 async function shrink(file){return new Promise((ok,no)=>{const r=new FileReader;r.onerror=no;r.onload=()=>{const im=new Image;im.onerror=no;im.onload=()=>{const k=Math.min(1,1400/im.width,900/im.height),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',.82))};im.src=r.result};r.readAsDataURL(file)})}
 image.onchange=async()=>{if(image.files[0]){imageData=await shrink(image.files[0]);preview.src=imageData}}
-form.onsubmit=e=>{e.preventDefault();const old=custom.find(x=>x.id===editId.value);const item={id:old?.id||String(Date.now()),title:title.value.trim(),date:date.value,url:url.value.trim(),type:type.value.trim()||'项目案例',members:[...document.querySelectorAll('#members input:checked')].map(x=>x.value),image:imageData||old?.image||'steady-happiness.png'};custom=old?custom.map(x=>x.id===old.id?item:x):[item,...custom];write();render();clearForm();status.textContent='已保存到当前浏览器。'};
+form.onsubmit=e=>{e.preventDefault();const old=custom.find(x=>x.id===editId.value);const item={id:old?.id||String(Date.now()),title:title.value.trim(),date:date.value,url:url.value.trim(),type:type.value.trim()||'项目案例',members:[...document.querySelectorAll('#members input:checked')].map(x=>x.value),image:imageData||old?.image||'steady-happiness.png'};custom=old?custom.map(x=>x.id===old.id?item:x):[item,...custom];write();render();clearForm();document.getElementById('status').textContent='已保存到当前浏览器。'};
 window.editCase=id=>{const x=custom.find(x=>x.id===id);if(!x)return;editId.value=x.id;title.value=x.title;date.value=x.date;url.value=x.url;type.value=x.type;document.querySelectorAll('#members input').forEach(i=>i.checked=x.members.includes(i.value));imageData=x.image;preview.src=x.image.startsWith('data:')?x.image:BASE+x.image;editor.scrollIntoView({behavior:'smooth'});status.textContent='正在编辑该案例。'};
 window.removeCase=(id,btn)=>{if(btn.dataset.ready!=='1'){btn.dataset.ready='1';btn.textContent='确认删除';return}custom=custom.filter(x=>x.id!==id);write();render()};
-members.innerHTML=Object.entries(PEOPLE).map(([id,name])=>`<label><input type="checkbox" value="${id}"> ${name}</label>`).join('');reset.onclick=clearForm;render();
+members.innerHTML=Object.entries(PEOPLE).map(([id,name])=>`<label><input type="checkbox" value="${id}"> ${name}</label>`).join('');resetBtn.onclick=clearForm;render();
 </script>
 </body>
 </html>
