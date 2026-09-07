@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>BOX UNIVERSE · Case Editor</title>
+  <style>
+    :root{color-scheme:dark;--ink:#111326;--blue:#7894ff;--pink:#ff9fd8;--paper:#eef1ff;--line:#303764}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#303b85 0,#151936 42%,#090b19 100%);color:var(--paper);font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;min-height:100vh}.shell{width:min(1180px,calc(100% - 32px));margin:auto;padding:48px 0 80px}header{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:28px}header p,.eyebrow{font:700 12px/1.4 ui-monospace,monospace;letter-spacing:.14em;color:#b7c5ff}h1{margin:4px 0 0;font-size:clamp(34px,6vw,72px);line-height:.95}header a{color:#fff;text-decoration:none;border:1px solid #7e8fd2;padding:10px 14px;border-radius:999px}.editor{background:rgba(239,242,255,.96);color:var(--ink);border:2px solid #8da0ff;border-radius:22px;padding:22px;box-shadow:10px 10px 0 #11162f;margin-bottom:38px}.editor h2{margin:0 0 5px}.editor-note{margin:0 0 18px;color:#586080;font-size:13px}.form-grid{display:grid;grid-template-columns:2fr 1fr;gap:12px}.field{display:grid;gap:6px;font-size:12px;font-weight:700}.field input,.field select{width:100%;border:1px solid #9ba7d3;background:white;color:#111326;border-radius:10px;padding:11px 12px;font:inherit}.wide{grid-column:1/-1}.members{display:flex;flex-wrap:wrap;gap:7px}.members label{background:#dfe4ff;border:1px solid #aeb8eb;border-radius:999px;padding:7px 10px;font-size:12px}.upload{display:grid;grid-template-columns:1fr 170px;gap:14px;align-items:center}.preview{width:170px;height:100px;object-fit:cover;background:#cfd5ef;border:1px dashed #7583bd;border-radius:10px}.actions{display:flex;gap:10px;margin-top:16px;align-items:center}.actions button,.card-actions button{border:0;border-radius:999px;padding:10px 15px;font-weight:800;cursor:pointer}.save{background:#293a94;color:white}.reset{background:#dfe4ff;color:#202955}.status{font-size:12px;color:#43518f}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.card{position:relative;background:#edf0ff;color:#151934;border:1px solid #7f8bcc;border-radius:17px;overflow:hidden;box-shadow:6px 6px 0 rgba(6,8,25,.65)}.card img{width:100%;aspect-ratio:16/10;display:block;object-fit:cover;background:#cfd5ef}.copy{padding:15px}.num{font:800 12px ui-monospace,monospace;color:#5463a3}.card h3{margin:7px 0 5px;font-size:18px}.card p{margin:0;color:#5c6380;font-size:12px}.meta{display:flex;justify-content:space-between;gap:10px;margin-top:14px;font:700 11px ui-monospace,monospace}.open{color:#2d43a2;text-decoration:none}.owner{margin-top:7px;color:#5966a6;font-size:11px}.card-actions{display:flex;gap:6px;margin-top:11px}.card-actions button{padding:6px 9px;background:#d7ddff;color:#273268;font-size:11px}.card-actions .danger{background:#ffdce9;color:#7d2348}@media(max-width:800px){.shell{width:min(100% - 20px,620px);padding-top:28px}header{align-items:start;flex-direction:column}.form-grid,.grid{grid-template-columns:1fr}.wide{grid-column:auto}.upload{grid-template-columns:1fr}.preview{width:100%;height:160px}}
+  </style>
+</head>
+<body>
+<main class="shell">
+  <header><div><p>BOX UNIVERSE / EDITABLE SAVE POINTS</p><h1>CASE ARCHIVE</h1></div><a href="https://dongdongzhang1222-coder.github.io/box-universe-team-archive/">返回团队网页 ↗</a></header>
+  <section class="editor" aria-labelledby="editor-title">
+    <p class="eyebrow">＋ NEW SAVE POINT</p><h2 id="editor-title">新增 / 编辑案例</h2>
+    <p class="editor-note">内容与上传图片只保存在当前浏览器。填写后点击保存；卡片可再次编辑或删除。</p>
+    <form id="form"><input id="editId" type="hidden"><div class="form-grid">
+      <label class="field"><span>案例标题 *</span><input id="title" required></label>
+      <label class="field"><span>日期 *</span><input id="date" type="date" required></label>
+      <label class="field wide"><span>项目链接 *</span><input id="url" type="url" placeholder="https://…" required></label>
+      <label class="field wide"><span>案例类型</span><input id="type" placeholder="品牌营销 / 内容营销"></label>
+      <div class="field wide"><span>归属玩家</span><div class="members" id="members"></div></div>
+      <label class="field wide"><span>封面图片</span><div class="upload"><input id="image" type="file" accept="image/*"><img id="preview" class="preview" alt="封面预览"></div></label>
+    </div><div class="actions"><button class="save" type="submit">保存案例</button><button class="reset" type="button" id="reset">清空表单</button><span class="status" id="status" role="status"></span></div></form>
+  </section>
+  <section class="grid" id="grid" aria-label="案例列表"></section>
+</main>
+<script>
+const BASE='https://dongdongzhang1222-coder.github.io/box-universe-team-archive/caseboard/';
+const PEOPLE={dongdong:'东东',gongning:'宫宁',lingxi:'灵皙',qiegao:'切糕',sisi:'思思',xiaoyao:'小垚'};
+const BUILTIN=[
+ {title:'亚宠展｜宝贝的可爱，宝贝来宠爱',url:'https://www.digitaling.com/projects/376361.html',members:['gongning','qiegao'],image:'pet-fair-cuteness.jpg',date:'2026-08-31',type:'宠物营销 / AI 营销'},
+ {title:'淘小宝 × 娃三岁“盒”作联名',url:'https://www.digitaling.com/projects/376375.html',members:['lingxi'],image:'xiaobao-wa3-collab.jpg',date:'2026-08-31',type:'IP 联名 / 产品营销'},
+ {title:'上淘宝寻凉伴',url:'https://www.digitaling.com/projects/375514.html',members:['xiaoyao'],image:'summer-cool.png',date:'2026-08-19',type:'季节营销 / 内容营销'},
+ {title:'七夕上淘宝，遇见爱情鸟',url:'https://www.digitaling.com/projects/375122.html',members:['dongdong','xiaoyao'],image:'qixi-love-birds.png',date:'2026-08-18',type:'七夕营销 / AI 营销'},
+ {title:'淘宝开了家串串香',url:'https://www.digitaling.com/projects/373197.html',members:['qiegao','xiaoyao'],image:'taobao-skewer-shop.jpg',date:'2026-07-20',type:'线下体验 / 兴趣营销'},
+ {title:'万千足球宝贝共赴一场热爱',url:'https://www.digitaling.com/projects/372574.html',members:['dongdong','gongning'],image:'football-babies.jpg',date:'2026-07-14',type:'体育营销 / 粉丝运营'},
+ {title:'淘到爱足球的 10000 种方式',url:'https://www.digitaling.com/projects/371713.html',members:['dongdong','gongning'],image:'football-10000.jpg',date:'2026-07-10',type:'兴趣营销 / 内容营销'},
+ {title:'只要咱不看主队就能赢',url:'https://www.digitaling.com/projects/371769.html',members:['dongdong','gongning'],image:'dont-watch-team.jpg',date:'2026-07-08',type:'体育营销 / 娱乐营销'},
+ {title:'异世界的掌中宝',url:'https://www.digitaling.com/projects/367758.html',members:['lingxi'],image:'palm-world.png',date:'2026-07-07',type:'IP 营销 / 电影大促'},
+ {title:'宝要稳稳嘟幸福',url:'https://www.digitaling.com/projects/371405.html',members:['lingxi'],image:'steady-happiness.png',date:'2026-07-07',type:'节点营销 / 情感营销'},
+ {title:'用 AI 试穿帮老爸试',url:'https://www.digitaling.com/projects/369887.html',members:['sisi'],image:'dad-tryon.png',date:'2026-06-16',type:'AI 营销 / 情感营销'},
+ {title:'淘小宝国际博物馆日',url:'https://www.digitaling.com/articles/1506294.html',members:['xiaoyao'],image:'museum-day.png',date:'2026-05-20',type:'节点营销 / IP 营销'},
+ {title:'欧阳娜娜 AI 购物',url:'https://www.digitaling.com/projects/367800.html',members:['qiegao','gongning'],image:'ouyang-nana-ai.jpg',date:'2026-05-19',type:'品牌代言 / AI 营销'},
+ {title:'盘淘会·淘宝生日宴',url:'https://www.digitaling.com/projects/367751.html',members:['xiaoyao','lingxi'],image:'pan-tao-hui.png',date:'2026-05-18',type:'IP 营销 / 大型活动'},
+ {title:'AI 试穿，各试各样',url:'https://www.digitaling.com/projects/367597.html',members:['dongdong'],image:'ai-tryon.jpg',date:'2026-05-18',type:'AI 技术 / 时尚营销'},
+ {title:'淘宝 AI 购物助手发布会',url:'https://www.digitaling.com/projects/367464.html',members:['sisi'],image:'ai-launch.jpg',date:'2026-05-14',type:'产品发布会 / AI 营销'}
+];
+const KEY='box-universe-standalone-cases-v1'; let custom=read(), imageData='';
+function read(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch{return []}}
+function write(){localStorage.setItem(KEY,JSON.stringify(custom))}
+function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function all(){return [...custom.map(x=>({...x,custom:true})),...BUILTIN].sort((a,b)=>b.date.localeCompare(a.date))}
+function render(){grid.innerHTML=all().map((x,i)=>`<article class="card"><img src="${x.image.startsWith('data:')?x.image:BASE+x.image}" alt="${esc(x.title)}"><div class="copy"><span class="num">${String(i+1).padStart(2,'0')}</span><h3>${esc(x.title)}</h3><p>${esc(x.type||'项目案例')}</p><div class="owner">归属：${(x.members||[]).map(m=>PEOPLE[m]).join('、')||'未指定'}</div><div class="meta"><time>${x.date.replaceAll('-','.')}</time><a class="open" href="${esc(x.url)}" target="_blank" rel="noreferrer">打开存档 ↗</a></div>${x.custom?`<div class="card-actions"><button onclick="editCase('${x.id}')">编辑</button><button class="danger" onclick="removeCase('${x.id}',this)">删除</button></div>`:''}</div></article>`).join('')}
+function clearForm(){form.reset();editId.value='';imageData='';preview.removeAttribute('src');status.textContent='';document.querySelectorAll('#members input').forEach(x=>x.checked=false)}
+async function shrink(file){return new Promise((ok,no)=>{const r=new FileReader;r.onerror=no;r.onload=()=>{const im=new Image;im.onerror=no;im.onload=()=>{const k=Math.min(1,1400/im.width,900/im.height),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',.82))};im.src=r.result};r.readAsDataURL(file)})}
+image.onchange=async()=>{if(image.files[0]){imageData=await shrink(image.files[0]);preview.src=imageData}}
+form.onsubmit=e=>{e.preventDefault();const old=custom.find(x=>x.id===editId.value);const item={id:old?.id||String(Date.now()),title:title.value.trim(),date:date.value,url:url.value.trim(),type:type.value.trim()||'项目案例',members:[...document.querySelectorAll('#members input:checked')].map(x=>x.value),image:imageData||old?.image||'steady-happiness.png'};custom=old?custom.map(x=>x.id===old.id?item:x):[item,...custom];write();render();clearForm();status.textContent='已保存到当前浏览器。'};
+window.editCase=id=>{const x=custom.find(x=>x.id===id);if(!x)return;editId.value=x.id;title.value=x.title;date.value=x.date;url.value=x.url;type.value=x.type;document.querySelectorAll('#members input').forEach(i=>i.checked=x.members.includes(i.value));imageData=x.image;preview.src=x.image.startsWith('data:')?x.image:BASE+x.image;editor.scrollIntoView({behavior:'smooth'});status.textContent='正在编辑该案例。'};
+window.removeCase=(id,btn)=>{if(btn.dataset.ready!=='1'){btn.dataset.ready='1';btn.textContent='确认删除';return}custom=custom.filter(x=>x.id!==id);write();render()};
+members.innerHTML=Object.entries(PEOPLE).map(([id,name])=>`<label><input type="checkbox" value="${id}"> ${name}</label>`).join('');reset.onclick=clearForm;render();
+</script>
+</body>
+</html>
