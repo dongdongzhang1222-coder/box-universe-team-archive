@@ -480,16 +480,29 @@
     var section = q('#players');
     if (!section) return;
     var galaxyTitle = q('.galaxy-copy h2', section);
-    if (galaxyTitle && galaxyTitle.textContent !== 'Interstellar Player') {
-      galaxyTitle.textContent = 'Interstellar Player';
+    if (galaxyTitle && galaxyTitle.textContent !== '请选择你的玩家') {
+      galaxyTitle.textContent = '请选择你的玩家';
     }
-    var archiveHeading = section.previousElementSibling;
-    if (archiveHeading && archiveHeading.matches('.section-heading')) {
-      var archiveTitle = q('h2', archiveHeading);
-      if (archiveTitle && archiveTitle.textContent !== 'Interstellar Player') {
-        archiveTitle.textContent = 'Interstellar Player';
-      }
+    var copy = q('.galaxy-copy', section);
+    if (copy && !q('.bux-player-order', copy)) {
+      var order = el('small', 'bux-player-order', '玩家按拼音首字母排序');
+      galaxyTitle.insertAdjacentElement('afterend', order);
     }
+  }
+
+  function syncTopSignature() {
+    var nav = q('.top-nav');
+    if (!nav || q('.bux-signature', nav)) return;
+    nav.appendChild(el('span', 'bux-signature', '创意手搓by 东东'));
+  }
+
+  function optimizeImages() {
+    qa('.player-orbits img, .case-grid img, .modal-cases img, .collage-layer').forEach(function (img) {
+      if (!img.hasAttribute('loading')) img.loading = 'lazy';
+      if (!img.hasAttribute('decoding')) img.decoding = 'async';
+    });
+    var aboutVideo = q('video.about-video');
+    if (aboutVideo && !aboutVideo.hasAttribute('preload')) aboutVideo.preload = 'metadata';
   }
 
   function setupEntryButton() {
@@ -800,6 +813,7 @@
   }
 
   function preloadJoyImages() {
+    if (!q('.joy-screen')) return;
     if (joyImagePreloads.length) return;
     ['./joy/xiaoyao-2years.jpg', './joy/team-building-2026.jpg'].forEach(function (src) {
       var image = new Image();
@@ -1036,8 +1050,8 @@
     var sec = q('.box-screen');
     if (!sec || sec.querySelector('.bux-box-archive-video')) return;
     var v = el('video', 'bux-box-archive-video');
-    v.src = BOX_ARCHIVE_VIDEO;
-    v.autoplay = true;
+    v.dataset.src = BOX_ARCHIVE_VIDEO;
+    v.autoplay = false;
     v.muted = true;
     v.defaultMuted = true;
     v.loop = true;
@@ -1046,21 +1060,21 @@
     v.setAttribute('playsinline', '');
     v.setAttribute('aria-label', 'BOX 档案动态影像');
     v.poster = './design/box.png';
-    v.preload = 'auto';
+    v.preload = 'none';
     sec.appendChild(v);
     sec.classList.add('bux-has-archive-video');
-    var kick = function () { v.play().catch(function () {}); };
-    kick();
-    v.addEventListener('loadeddata', kick, { once: true });
-    document.addEventListener('click', kick, { once: true });
+    var kick = function () {
+      if (!v.src) v.src = v.dataset.src;
+      v.play().catch(function () {});
+    };
     if (typeof IntersectionObserver === 'function') {
       new IntersectionObserver(function (entries) {
         entries.forEach(function (en) {
           if (en.isIntersecting) kick();
           else if (!v.paused) v.pause();
         });
-      }, { rootMargin: '200px 0px' }).observe(sec);
-    }
+      }, { rootMargin: '0px' }).observe(sec);
+    } else document.addEventListener('click', kick, { once: true });
   }
 
   /* ============================================================
@@ -1071,8 +1085,8 @@
     var sec = q('.team-collage');
     if (!sec || sec.querySelector('.bux-collage-video')) return;
     var v = el('video', 'bux-collage-video');
-    v.src = COLLAGE_VIDEO;
-    v.autoplay = true;
+    v.dataset.src = COLLAGE_VIDEO;
+    v.autoplay = false;
     v.muted = true;
     v.defaultMuted = true;
     v.loop = true;
@@ -1081,13 +1095,13 @@
     v.setAttribute('playsinline', '');
     v.setAttribute('aria-hidden', 'true');
     v.poster = './design/team-collage.png';
-    v.preload = 'auto';
+    v.preload = 'none';
     sec.appendChild(v);
     sec.classList.add('bux-has-video');
-    var kick = function () { v.play().catch(function () {}); };
-    kick();
-    v.addEventListener('loadeddata', kick, { once: true });
-    document.addEventListener('click', kick, { once: true });
+    var kick = function () {
+      if (!v.src) v.src = v.dataset.src;
+      v.play().catch(function () {});
+    };
 
     // Only decode while the collage is on/near screen: saves CPU, GPU memory
     // and battery on a long single-page scroll.
@@ -1097,8 +1111,8 @@
           if (en.isIntersecting) kick();
           else if (!v.paused) v.pause();
         });
-      }, { rootMargin: '200px 0px' }).observe(sec);
-    }
+      }, { rootMargin: '0px' }).observe(sec);
+    } else document.addEventListener('click', kick, { once: true });
   }
 
   /* ============================================================
@@ -1108,6 +1122,8 @@
   function sync() {
     setupEntryButton();
     syncPlayerHeading();
+    syncTopSignature();
+    optimizeImages();
     buildCaseEditor();
     syncCaseArchive();
     decorateCaseCards();
