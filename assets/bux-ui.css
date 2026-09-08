@@ -503,26 +503,42 @@
 
 /* Hand-made signature: visible but never competes with the navigation. */
 .bux-signature {
-  position: fixed;
-  z-index: 71;
-  top: 37px;
+  position: absolute;
+  z-index: 1;
+  top: 50%;
   right: 165px;
-  color: #253b9e;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #273677;
   font: 800 11px var(--pixel);
   letter-spacing: .06em;
-  text-shadow: 0 1px rgba(255,255,255,.85);
   pointer-events: none;
   animation: buxSignatureFloat 3.2s ease-in-out infinite;
 }
+.bux-pixel-heart {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 23px;
+  background:
+    radial-gradient(circle at 31% 23%, #8ea0e8 0 2px, transparent 2.6px),
+    #fff;
+  clip-path: polygon(
+    8% 17%, 17% 9%, 38% 9%, 50% 22%,
+    62% 9%, 83% 9%, 92% 17%, 100% 30%,
+    100% 48%, 50% 96%, 0 48%, 0 30%
+  );
+  filter: drop-shadow(1px 1px 0 rgba(53,70,171,.22));
+}
 @media (width<=980px) {
   .bux-signature {
-    top: 76px;
     right: 20px;
   }
 }
 @keyframes buxSignatureFloat {
-  0%, 100% { transform: translate3d(0, 0, 0) rotate(-1deg); }
-  50% { transform: translate3d(0, -5px, 0) rotate(1deg); }
+  0%, 100% { transform: translate3d(0, -50%, 0) rotate(-1deg); }
+  50% { transform: translate3d(0, calc(-50% - 4px), 0) rotate(1deg); }
 }
 
 .player-detail .modal-copy {
@@ -592,7 +608,6 @@
   }
 
   .bux-signature {
-    top: 72px;
     right: 12px;
     max-width: 44vw;
     font-size: 8px;

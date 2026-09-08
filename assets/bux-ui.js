@@ -493,7 +493,9 @@
   function syncTopSignature() {
     var nav = q('.top-nav');
     if (!nav || q('.bux-signature', nav)) return;
-    nav.appendChild(el('span', 'bux-signature', '创意手搓by 东东'));
+    var signature = el('span', 'bux-signature');
+    signature.innerHTML = '<i class="bux-pixel-heart" aria-hidden="true"></i><span>创意手搓by东东</span>';
+    nav.appendChild(signature);
   }
 
   function optimizeImages() {
