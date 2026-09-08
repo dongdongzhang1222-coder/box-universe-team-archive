@@ -1054,3 +1054,171 @@
   .entry-page .start-hit,
   .bux-signature { animation: none; }
 }
+
+/* ------------------------------------------------------------
+   9. END SCREEN — shared likes and live comment barrage
+   ------------------------------------------------------------ */
+.bux-interactions {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(360px, 1.1fr);
+  align-items: center;
+  gap: clamp(24px, 5vw, 80px);
+  width: 100%;
+  min-height: 390px;
+  padding: clamp(34px, 5vw, 72px) clamp(20px, 7vw, 110px) 132px;
+  overflow: hidden;
+  color: #17266f;
+  background:
+    radial-gradient(circle at 84% 12%, rgba(255,255,255,.75) 0 2px, transparent 3px),
+    radial-gradient(circle at 12% 34%, rgba(255,255,255,.7) 0 2px, transparent 3px),
+    linear-gradient(160deg, #eef1ff 0%, #cbd4ff 48%, #aebcf8 100%);
+  border-top: 4px solid #fff;
+}
+.bux-interactions::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .24;
+  background-image: radial-gradient(circle, #5067dc 0 2px, transparent 2.4px);
+  background-size: 34px 34px;
+}
+.bux-interaction-copy,
+.bux-interaction-actions {
+  position: relative;
+  z-index: 2;
+}
+.bux-interaction-copy p,
+.bux-comment-form label {
+  display: block;
+  margin: 0 0 10px;
+  color: #5067dc;
+  font: 900 10px var(--pixel);
+  letter-spacing: .16em;
+}
+.bux-interaction-copy h2 {
+  margin: 0 0 14px;
+  font: 400 clamp(42px, 5vw, 76px)/.92 var(--title);
+  letter-spacing: .01em;
+}
+.bux-interaction-copy > span {
+  display: block;
+  max-width: 34em;
+  font-size: clamp(13px, 1.2vw, 17px);
+  line-height: 1.75;
+}
+.bux-interaction-actions { display: grid; gap: 16px; }
+.bux-like {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  width: 100%;
+  min-height: 90px;
+  color: #fff;
+  background: linear-gradient(135deg, #e786bd, #5067dc);
+  border: 3px solid #17266f;
+  border-radius: 16px;
+  box-shadow: 8px 9px #17266f42;
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+.bux-like:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 8px 12px #17266f42;
+  filter: brightness(1.05);
+}
+.bux-like b { font-size: clamp(34px, 4vw, 54px); }
+.bux-like span { font: 900 clamp(14px, 1.4vw, 19px) var(--pixel); }
+.bux-like.is-liked { background: linear-gradient(135deg, #f2a7cf, #7588ea); }
+.bux-like:disabled { cursor: default; opacity: .9; }
+.bux-comment-form {
+  padding: 18px;
+  background: rgba(255,255,255,.72);
+  border: 2px solid #5067dc;
+  border-radius: 14px;
+}
+.bux-comment-form > div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+.bux-comment-form input {
+  min-width: 0;
+  height: 46px;
+  padding: 0 13px;
+  color: #17266f;
+  background: #fff;
+  border: 2px solid #8c9be5;
+  border-radius: 8px;
+  outline: none;
+}
+.bux-comment-form input:focus {
+  border-color: #e786bd;
+  box-shadow: 0 0 0 3px #e786bd3d;
+}
+.bux-comment-form button {
+  padding: 0 16px;
+  color: #fff;
+  background: #5067dc;
+  border: 2px solid #17266f;
+  border-radius: 8px;
+  font: 900 10px var(--pixel);
+  cursor: pointer;
+}
+.bux-comment-form button:disabled { opacity: .55; cursor: wait; }
+.bux-interaction-status {
+  display: block;
+  min-height: 18px;
+  margin-top: 8px;
+  color: #3c4c9a;
+  font: 800 9px var(--pixel);
+}
+.bux-barrage-track {
+  position: absolute;
+  z-index: 3;
+  right: 0;
+  bottom: 12px;
+  left: 0;
+  height: 104px;
+  overflow: hidden;
+  pointer-events: none;
+  border-top: 2px dashed rgba(80,103,220,.45);
+}
+.bux-barrage-item {
+  position: absolute;
+  top: calc(9px + var(--lane) * 30px);
+  left: 100%;
+  width: max-content;
+  max-width: 88vw;
+  padding: 5px 11px;
+  color: #fff;
+  background: rgba(38,52,133,.84);
+  border: 1px solid rgba(255,255,255,.86);
+  border-radius: 99px;
+  box-shadow: 3px 3px #17266f38;
+  font: 800 10px var(--pixel);
+  white-space: nowrap;
+  animation: buxBarrage var(--duration) linear var(--delay) both;
+}
+@keyframes buxBarrage {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-100vw - 110%)); }
+}
+@media (width<=760px) {
+  .bux-interactions {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    min-height: 540px;
+    padding: 38px 16px 126px;
+  }
+  .bux-interaction-copy h2 { font-size: clamp(40px, 12vw, 58px); }
+  .bux-like { min-height: 76px; }
+  .bux-comment-form > div { grid-template-columns: 1fr; }
+  .bux-comment-form button { height: 42px; }
+  .bux-barrage-item { font-size: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bux-barrage-item { animation-duration: 1ms; opacity: 0; }
+}

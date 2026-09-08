@@ -79,6 +79,8 @@
     }
   ];
   var CASE_STORAGE_KEY = 'box-universe-custom-cases-v1';
+  var INTERACTION_API = 'https://box-universe-likes-api.dongdongzhang1222.workers.dev';
+  var LIKE_STORAGE_KEY = 'box-universe-liked-v1';
   var PLAYER_LABELS = {
     dongdong: '东东', gongning: '宫宁', lingxi: '灵皙',
     qiegao: '切糕', sisi: '思思', xiaoyao: '小垚'
@@ -1118,6 +1120,134 @@
   }
 
   /* ============================================================
+     9. END SCREEN — shared likes + live comment barrage
+     ============================================================ */
+  function addBarrage(track, comment, index, immediate) {
+    if (!track || !comment || !comment.body) return;
+    var item = el('span', 'bux-barrage-item', comment.body);
+    item.style.setProperty('--lane', String(index % 3));
+    item.style.setProperty('--delay', immediate ? '0s' : String((index % 8) * 1.35) + 's');
+    item.style.setProperty('--duration', String(11 + (index % 5) * 1.4) + 's');
+    track.appendChild(item);
+    item.addEventListener('animationend', function () { item.remove(); }, { once: true });
+  }
+
+  function playBarrages(track, comments) {
+    if (!track) return;
+    track.textContent = '';
+    (comments || []).slice(-18).forEach(function (comment, index) {
+      addBarrage(track, comment, index, false);
+    });
+  }
+
+  function buildInteractions() {
+    var endWrap = q('.end-wrap');
+    if (!endWrap || q('.bux-interactions', endWrap)) return;
+
+    var section = el('section', 'bux-interactions');
+    section.setAttribute('aria-label', 'BOX UNIVERSE 在线互动');
+    section.innerHTML =
+      '<div class="bux-interaction-copy">' +
+        '<p>INTERACTION SIGNAL / 在线互动</p>' +
+        '<h2>给这个宇宙留个信号</h2>' +
+        '<span>点赞会被全宇宙实时记录，评论会变成弹幕从这里经过。</span>' +
+      '</div>' +
+      '<div class="bux-interaction-actions">' +
+        '<button class="bux-like" type="button" aria-label="给 BOX UNIVERSE 点赞">' +
+          '<b aria-hidden="true">👍</b><span>正在连接…</span>' +
+        '</button>' +
+        '<form class="bux-comment-form">' +
+          '<label for="bux-comment-input">发一条宇宙弹幕</label>' +
+          '<div><input id="bux-comment-input" maxlength="60" autocomplete="off" placeholder="最多 60 个字" required>' +
+          '<button type="submit">发送弹幕 ↗</button></div>' +
+          '<small class="bux-interaction-status" role="status" aria-live="polite"></small>' +
+        '</form>' +
+      '</div>' +
+      '<div class="bux-barrage-track" aria-label="最新评论弹幕"></div>';
+    endWrap.appendChild(section);
+
+    var like = q('.bux-like', section);
+    var likeText = q('.bux-like span', section);
+    var form = q('.bux-comment-form', section);
+    var input = q('input', form);
+    var submit = q('button[type="submit"]', form);
+    var status = q('.bux-interaction-status', section);
+    var track = q('.bux-barrage-track', section);
+    var liked = false;
+    try { liked = localStorage.getItem(LIKE_STORAGE_KEY) === '1'; } catch (_) {}
+
+    function showCount(count) {
+      likeText.textContent = String(Number(count) || 0) + ' 次喜欢';
+      like.classList.toggle('is-liked', liked);
+      like.disabled = liked;
+    }
+
+    fetch(INTERACTION_API + '/api/state', { cache: 'no-store' })
+      .then(function (response) {
+        if (!response.ok) throw new Error('state');
+        return response.json();
+      })
+      .then(function (data) {
+        showCount(data.count);
+        playBarrages(track, data.comments);
+      })
+      .catch(function () {
+        likeText.textContent = '信号连接失败';
+        status.textContent = '互动服务暂时离线，请稍后再试。';
+      });
+
+    like.addEventListener('click', function () {
+      if (liked) return;
+      like.disabled = true;
+      likeText.textContent = '发送喜欢中…';
+      fetch(INTERACTION_API + '/api/like', { method: 'POST' })
+        .then(function (response) {
+          if (!response.ok) throw new Error('like');
+          return response.json();
+        })
+        .then(function (data) {
+          liked = true;
+          try { localStorage.setItem(LIKE_STORAGE_KEY, '1'); } catch (_) {}
+          showCount(data.count);
+          status.textContent = '你的喜欢已经被宇宙收到。';
+        })
+        .catch(function () {
+          like.disabled = false;
+          likeText.textContent = '再试一次';
+          status.textContent = '点赞没有发送成功，请再点一次。';
+        });
+    });
+
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      var body = input.value.replace(/\s+/g, ' ').trim();
+      if (!body) return;
+      submit.disabled = true;
+      status.textContent = '弹幕正在穿越大气层…';
+      fetch(INTERACTION_API + '/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body: body })
+      })
+        .then(function (response) {
+          return response.json().then(function (data) {
+            if (!response.ok) throw new Error(data.error || 'comment');
+            return data;
+          });
+        })
+        .then(function (data) {
+          input.value = '';
+          status.textContent = '发布成功，注意下方弹幕出没。';
+          addBarrage(track, data.comment, Date.now(), true);
+        })
+        .catch(function (error) {
+          status.textContent = error.message === 'comment' ? '发布失败，请稍后再试。' : error.message;
+        })
+        .finally(function () { submit.disabled = false; });
+    });
+  }
+
+  /* ============================================================
      orchestration
      ============================================================ */
   var raf = 0;
@@ -1138,6 +1268,7 @@
     syncIdeaCount();
     buildBoxArchiveVideo();
     buildCollageVideo();
+    buildInteractions();
   }
   function schedule() {
     if (raf) return;
