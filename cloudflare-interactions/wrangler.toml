@@ -1,0 +1,9 @@
+name = "box-universe-likes-api"
+main = "worker.js"
+compatibility_date = "2026-09-08"
+workers_dev = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "box-universe-likes"
+database_id = "55791257-05c1-4cff-94de-fe7f46791637"
