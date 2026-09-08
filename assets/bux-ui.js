@@ -1122,21 +1122,47 @@
   /* ============================================================
      9. END SCREEN — shared likes + live comment barrage
      ============================================================ */
-  function addBarrage(track, comment, index, immediate) {
+  function addBarrage(track, comment, index, immediate, onDone) {
     if (!track || !comment || !comment.body) return;
     var item = el('span', 'bux-barrage-item', comment.body);
     item.style.setProperty('--lane', String(index % 3));
     item.style.setProperty('--delay', immediate ? '0s' : String((index % 8) * 1.35) + 's');
     item.style.setProperty('--duration', String(11 + (index % 5) * 1.4) + 's');
     track.appendChild(item);
-    item.addEventListener('animationend', function () { item.remove(); }, { once: true });
+    item.addEventListener('animationend', function () {
+      item.remove();
+      if (onDone) onDone();
+    }, { once: true });
+  }
+
+  function launchBarrageLane(track, lane) {
+    if (!track || !track.isConnected) return;
+    var queue = track._buxQueue || [];
+    if (!queue.length) {
+      setTimeout(function () { launchBarrageLane(track, lane); }, 1200);
+      return;
+    }
+    var comment = queue.shift();
+    queue.push(comment);
+    addBarrage(track, comment, lane, true, function () {
+      setTimeout(function () { launchBarrageLane(track, lane); }, 450 + lane * 220);
+    });
   }
 
   function playBarrages(track, comments) {
     if (!track) return;
-    track.textContent = '';
-    (comments || []).slice(-18).forEach(function (comment, index) {
-      addBarrage(track, comment, index, false);
+    if (!track._buxQueue) track._buxQueue = [];
+    if (!track._buxKnown) track._buxKnown = Object.create(null);
+    (comments || []).forEach(function (comment) {
+      var key = String(comment.id || comment.created_at || comment.body);
+      if (track._buxKnown[key]) return;
+      track._buxKnown[key] = true;
+      track._buxQueue.push(comment);
+    });
+    if (track._buxStarted || !track._buxQueue.length) return;
+    track._buxStarted = true;
+    [0, 1, 2].forEach(function (lane) {
+      setTimeout(function () { launchBarrageLane(track, lane); }, 500 + lane * 1050);
     });
   }
 
@@ -1182,19 +1208,25 @@
       like.disabled = liked;
     }
 
-    fetch(INTERACTION_API + '/api/state', { cache: 'no-store' })
-      .then(function (response) {
-        if (!response.ok) throw new Error('state');
-        return response.json();
-      })
-      .then(function (data) {
-        showCount(data.count);
-        playBarrages(track, data.comments);
-      })
-      .catch(function () {
-        likeText.textContent = '信号连接失败';
-        status.textContent = '互动服务暂时离线，请稍后再试。';
-      });
+    function refreshState() {
+      fetch(INTERACTION_API + '/api/state', { cache: 'no-store' })
+        .then(function (response) {
+          if (!response.ok) throw new Error('state');
+          return response.json();
+        })
+        .then(function (data) {
+          showCount(data.count);
+          playBarrages(track, data.comments);
+        })
+        .catch(function () {
+          if (likeText.textContent === '正在连接…') {
+            likeText.textContent = '信号连接失败';
+            status.textContent = '互动服务暂时离线，请稍后再试。';
+          }
+        });
+    }
+    refreshState();
+    setInterval(refreshState, 15000);
 
     like.addEventListener('click', function () {
       if (liked) return;
@@ -1239,6 +1271,7 @@
           input.value = '';
           status.textContent = '发布成功，注意下方弹幕出没。';
           addBarrage(track, data.comment, Date.now(), true);
+          playBarrages(track, [data.comment]);
         })
         .catch(function (error) {
           status.textContent = error.message === 'comment' ? '发布失败，请稍后再试。' : error.message;
