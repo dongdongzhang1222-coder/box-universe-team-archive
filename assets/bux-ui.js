@@ -79,8 +79,8 @@
     }
   ];
   var CASE_STORAGE_KEY = 'box-universe-custom-cases-v1';
-  var INTERACTION_API = 'https://box-universe-likes-api.dongdongzhang1222.workers.dev';
-  var LIKE_STORAGE_KEY = 'box-universe-liked-v1';
+  var INTERACTION_API = '';
+  var LIKE_STORAGE_KEY = 'box-universe-liked-cn-v3';
   var PLAYER_LABELS = {
     dongdong: '东东', gongning: '宫宁', lingxi: '灵皙',
     qiegao: '切糕', sisi: '思思', xiaoyao: '小垚'
@@ -111,12 +111,32 @@
   }
 
   function saveCustomCases() {
-    try {
-      localStorage.setItem(CASE_STORAGE_KEY, JSON.stringify(customCases));
+    return fetch('/api/cases/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cases: customCases })
+    }).then(function (response) {
+      if (!response.ok) throw new Error('server-save');
+      return response.json();
+    }).then(function (data) {
+      if (!data || !Array.isArray(data.cases)) throw new Error('server-save');
+      customCases = data.cases;
+      try { localStorage.setItem(CASE_STORAGE_KEY, JSON.stringify(customCases)); } catch (_) {}
+      syncCaseArchive();
       return true;
-    } catch (_) {
-      return false;
-    }
+    });
+  }
+
+  function loadSharedCases() {
+    fetch('/api/cases', { cache: 'no-store' })
+      .then(function (response) { if (!response.ok) throw new Error('cases'); return response.json(); })
+      .then(function (data) {
+        if (!Array.isArray(data.cases)) return;
+        customCases = data.cases;
+        try { localStorage.setItem(CASE_STORAGE_KEY, JSON.stringify(customCases)); } catch (_) {}
+        syncCaseArchive();
+        decorateCaseCards();
+      }).catch(function () {});
   }
 
   function displayDate(value) {
@@ -261,7 +281,7 @@
     caseEditor.preview.removeAttribute('src');
     caseEditor.preview.hidden = true;
     caseEditor.save.textContent = '保存并加入案例库';
-    caseEditor.status.textContent = '填写项目资料，新增内容仅保存在当前浏览器。';
+    caseEditor.status.textContent = '填写项目资料，保存后会同步到团队共享空间。';
   }
 
   function editCustomCase(id) {
@@ -298,7 +318,9 @@
       return;
     }
     customCases = customCases.filter(function (entry) { return entry.id !== id; });
-    saveCustomCases();
+    saveCustomCases().catch(function () {
+      if (caseEditor) caseEditor.status.textContent = '删除同步失败，请检查服务后重试。';
+    });
     syncCaseArchive();
     if (caseEditor) caseEditor.status.textContent = '已删除：' + item.title;
   }
@@ -330,7 +352,7 @@
       '<button class="bux-case-editor-close" type="button" aria-label="关闭案例编辑器">×</button>' +
       '<header><div><p>＋ CASE CREATOR / LOCAL EDITOR</p>' +
       '<h3 id="bux-case-editor-title">编辑并上传新案例</h3></div>' +
-      '<span>图片会自动压缩，并保存在当前浏览器中。</span></header>' +
+      '<span>图片会自动压缩，并持久保存在团队共享空间。</span></header>' +
       '<form class="bux-case-form">' +
       '<input type="hidden" name="caseId">' +
       '<label><span>项目名称 *</span><input name="title" type="text" required maxlength="80" placeholder="输入项目名称"></label>' +
@@ -341,7 +363,7 @@
       '<label class="bux-case-file"><span>点击上传项目图 *</span><input name="image" type="file" accept="image/*"><small>用于“查看详情”；支持 JPG / PNG / WEBP，新增案例时必选</small></label>' +
       '<div class="bux-case-preview"><img alt="待上传项目图预览" hidden></div>' +
       '<div class="bux-case-form-actions"><button type="submit">保存并加入案例库</button><button type="reset">清空</button></div>' +
-      '<p class="bux-case-editor-status" role="status" aria-live="polite">填写项目资料，新增内容仅保存在当前浏览器。</p>' +
+      '<p class="bux-case-editor-status" role="status" aria-live="polite">填写项目资料，保存后会同步到团队共享空间。</p>' +
       '</form>';
     modal.appendChild(panel);
     document.body.appendChild(modal);
@@ -389,6 +411,9 @@
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Escape' && !modal.hidden) caseEditor.close();
     });
+    if (params.get('caseEditor') === '1') {
+      setTimeout(function () { resetCaseEditor(); caseEditor.open(); }, 80);
+    }
 
     form.elements.image.addEventListener('change', function () {
       var file = form.elements.image.files && form.elements.image.files[0];
@@ -430,14 +455,15 @@
         };
         if (existing) customCases = customCases.map(function (entry) { return entry.id === item.id ? item : entry; });
         else customCases.push(item);
-        if (!saveCustomCases()) throw new Error('storage-full');
-        syncCaseArchive();
-        decorateCaseCards();
-        resetCaseEditor();
-        caseEditor.status.textContent = '已保存：' + item.title;
+        return saveCustomCases().then(function () {
+          syncCaseArchive();
+          decorateCaseCards();
+          resetCaseEditor();
+          caseEditor.status.textContent = '已持久保存：' + item.title;
+        });
       }).catch(function (error) {
-        caseEditor.status.textContent = error && error.message === 'storage-full'
-          ? '保存空间不足，请换一张更小的图片后重试。'
+        caseEditor.status.textContent = error && error.message === 'server-save'
+          ? '保存服务暂时不可用，请确认网页通过启动器打开后重试。'
           : '图片处理失败，请换一张图片后重试。';
       }).finally(function () { caseEditor.save.disabled = false; });
     });
@@ -454,14 +480,13 @@
   }
 
   function createCaseLauncher() {
-    var launcher = el('button', 'case-card bux-case-editor-card');
-    launcher.type = 'button';
-    launcher.dataset.buxCaseLauncher = '1';
-    launcher.setAttribute('aria-label', '新增或编辑案例');
+    var launcher = el('article', 'case-card bux-case-editor-card');
     launcher.innerHTML =
       '<span class="case-image"><i>＋</i><small>LOCAL EDITOR</small></span>' +
       '<strong>＋</strong><h3>新增案例</h3><p>上传封面 / 编辑资料</p>' +
-      '<footer><time>YOUR TURN</time><span>打开编辑器 ↗</span></footer>';
+      '<footer><time>YOUR TURN</time>' +
+      '<a class="bux-case-open bux-case-editor-link" href="./?entered=1&amp;caseEditor=1#cases" ' +
+      'data-bux-case-launcher="1" aria-label="打开案例编辑器">打开编辑器 ↗</a></footer>';
     return launcher;
   }
 
@@ -471,6 +496,7 @@
     document.addEventListener('click', function (event) {
       var launcher = event.target.closest('[data-bux-case-launcher]');
       if (!launcher || !caseEditor) return;
+      if (launcher.tagName === 'A') return;
       event.preventDefault();
       event.stopPropagation();
       resetCaseEditor();
@@ -559,17 +585,9 @@
       if (btn.dataset.buxPass !== '1') btn.classList.remove('is-bux-pressed');
     });
     btn.addEventListener('click', function (event) {
-      if (btn.dataset.buxPass === '1') {
-        delete btn.dataset.buxPass;
-        return;
-      }
-      event.preventDefault();
-      event.stopPropagation();
       btn.classList.add('is-bux-pressed');
       setTimeout(function () {
-        if (!btn.isConnected) return;
-        btn.dataset.buxPass = '1';
-        btn.click();
+        if (btn.isConnected) btn.classList.remove('is-bux-pressed');
       }, 320);
     });
   }
@@ -945,7 +963,7 @@
   function hideUndo() { if (undoBar) undoBar.classList.remove('is-open'); }
 
   function addDeleteButtons() {
-    qa('.idea-cards .idea-card').forEach(function (card) {
+    qa('.idea-cards .idea-card:not(.cn-shared-card)').forEach(function (card) {
       var row = card.querySelector('.idea-meta > div');
       if (!row) return;
       if (removed[cardKey(card)]) card.classList.add('bux-removed');
@@ -1303,6 +1321,8 @@
     buildCollageVideo();
     buildInteractions();
   }
+
+  loadSharedCases();
   function schedule() {
     if (raf) return;
     raf = requestAnimationFrame(function () { raf = 0; sync(); });

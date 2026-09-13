@@ -1,0 +1,27 @@
+{
+  "likes": 8,
+  "comments": [
+    {
+      "id": 1,
+      "body": "可爱",
+      "created_at": "2026-09-08 16:02:20"
+    },
+    {
+      "id": 2,
+      "body": "挺好玩儿",
+      "created_at": "2026-09-08 16:02:42"
+    },
+    {
+      "id": 3,
+      "body": "欢迎来到 BOX UNIVERSE，脑洞持续运行中 ✦",
+      "created_at": "2026-09-08 16:02:48"
+    },
+    {
+      "id": 4,
+      "body": "WELCOME AND ENJOY!",
+      "created_at": "2026-09-09 02:48:39"
+    }
+  ],
+  "cases": [],
+  "uploads": []
+}
