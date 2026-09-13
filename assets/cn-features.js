@@ -30,7 +30,7 @@
     button.className = 'xiaoliao-dock';
     button.type = 'button';
     button.setAttribute('aria-label', '打开小料自取');
-    button.innerHTML = '<span class="xiaoliao-art"><img src="./assets/resources/xiaoliao-screen-transparent.png" alt="小料自取"></span>';
+    button.innerHTML = '<span class="xiaoliao-art"><img src="./assets/resources/xiaoliao-screen-mobile.png" width="384" height="368" alt="小料自取"></span>';
 
     var modal = document.createElement('div');
     modal.className = 'xiaoliao-modal';

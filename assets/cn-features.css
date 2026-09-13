@@ -1,10 +1,10 @@
-.xiaoliao-dock{position:fixed;z-index:188;top:88px;right:18px;width:172px;padding:0;cursor:grab;touch-action:none;user-select:none;background:transparent;border:0;filter:drop-shadow(0 9px 16px rgba(48,37,99,.28));animation:xiaoliao-float 3.8s ease-in-out infinite;transition:filter .2s ease}
+.xiaoliao-dock{position:fixed;z-index:188;top:88px;right:18px;width:172px;aspect-ratio:384/368;padding:0;cursor:grab;touch-action:none;user-select:none;background:transparent;border:0;filter:drop-shadow(0 9px 16px rgba(48,37,99,.28));animation:xiaoliao-float 3.8s ease-in-out infinite;transition:filter .2s ease}
 .xiaoliao-dock.is-dragging{cursor:grabbing;animation:none}
 .xiaoliao-dock:hover,.xiaoliao-dock:focus-visible{filter:drop-shadow(0 14px 20px rgba(48,37,99,.38)) brightness(1.04);outline:0;animation-play-state:paused}
 .xiaoliao-dock[hidden]{display:none!important}
 .xiaoliao-dock.is-dragging{cursor:grabbing;animation:none;user-select:none;touch-action:none}
-.xiaoliao-art{position:relative;display:block}
-.xiaoliao-art img{display:block;width:100%;height:auto}
+.xiaoliao-art{position:absolute;display:block;inset:0;width:100%;height:100%}
+.xiaoliao-art img{display:block;width:100%;height:100%;object-fit:contain}
 @keyframes xiaoliao-float{0%,100%{transform:translate3d(0,0,0) rotate(-.5deg)}50%{transform:translate3d(0,-7px,0) rotate(.8deg)}}
 @media(prefers-reduced-motion:reduce){.xiaoliao-dock{animation:none}}
 .entry-page .start-hit{display:block}
