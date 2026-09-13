@@ -14,6 +14,14 @@
   var latestUploads = [];
   var pendingJoyFile = null;
   var joyEditor = null;
+  var STATIC_JOY_ITEMS = [{
+    id: 'leo-birthday-2026',
+    type: 'image/jpeg',
+    url: './joy/leo-birthday-2026.jpg',
+    title: '两个狮子座的生日🎂',
+    description: '统统闪开，狮子驾到！',
+    static: true
+  }];
 
   function fileToDataUrl(file) {
     return new Promise(function (resolve, reject) {
@@ -198,7 +206,7 @@
     var hotspots = q('.joy-hotspots');
     if (!hotspots) return;
     qa('.cn-joy-upload-row', hotspots).forEach(function (node) { node.remove(); });
-    var joyItems = items.filter(function (item) { return item.space === 'joy'; });
+    var joyItems = STATIC_JOY_ITEMS.concat(items.filter(function (item) { return item.space === 'joy'; }));
     hotspots.classList.toggle('cn-joy-list-mode', joyItems.length > 0);
     var uploadLabel = q(':scope > label', hotspots);
     if (uploadLabel) {
@@ -208,7 +216,7 @@
     joyItems.forEach(function (item, index) {
       var number = index + 3;
       var row = document.createElement('div');
-      row.className = 'cn-joy-upload-row';
+      row.className = 'cn-joy-upload-row' + (item.static ? ' cn-joy-static-row' : '');
       var select = document.createElement('button');
       select.type = 'button';
       select.className = 'cn-joy-select';
@@ -216,17 +224,19 @@
       q('b', select).textContent = item.title || item.name;
       q('small', select).textContent = item.description || '团队上传的快乐存档。';
       select.addEventListener('click', function () { showJoyItem(item, number); });
-      var remove = document.createElement('button');
-      remove.type = 'button';
-      remove.className = 'cn-joy-delete';
-      remove.textContent = '删除';
-      remove.setAttribute('aria-label', '删除团队照片 ' + (item.title || item.name));
-      remove.addEventListener('click', function () {
-        if (!confirm('确认删除“' + (item.title || item.name) + '”？')) return;
-        api('/api/uploads/' + encodeURIComponent(item.id), { method: 'DELETE' }).then(loadUploads);
-      });
       row.appendChild(select);
-      row.appendChild(remove);
+      if (!item.static) {
+        var remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'cn-joy-delete';
+        remove.textContent = '删除';
+        remove.setAttribute('aria-label', '删除团队照片 ' + (item.title || item.name));
+        remove.addEventListener('click', function () {
+          if (!confirm('确认删除“' + (item.title || item.name) + '”？')) return;
+          api('/api/uploads/' + encodeURIComponent(item.id), { method: 'DELETE' }).then(loadUploads);
+        });
+        row.appendChild(remove);
+      }
       hotspots.insertBefore(row, uploadLabel);
     });
   }

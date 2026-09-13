@@ -25,6 +25,7 @@
 .joy-hotspots.cn-joy-list-mode>button:before{position:static!important;inset:auto!important;display:grid;place-items:center;align-self:stretch;border-radius:0!important;border-right:3px solid #536bd2;color:#5067dc;background:#eef1ff!important;backdrop-filter:none!important;font:400 clamp(28px,4vw,50px)/1 var(--pixel)}
 .joy-hotspots.cn-joy-list-mode>button:after{padding:12px 18px;white-space:pre-line;font:700 clamp(11px,1.2vw,18px)/1.7 var(--body)}
 .joy-hotspots.cn-joy-list-mode>button[data-bux-active="1"]{color:#fff;background:#101a52!important;box-shadow:0 0 0 3px #efa6ce,0 8px 18px rgba(11,18,59,.35)}
+.cn-joy-upload-row.cn-joy-static-row{grid-template-columns:1fr}
 .joy-hotspots.cn-joy-list-mode>button:nth-of-type(1):before{content:'01'}
 .joy-hotspots.cn-joy-list-mode>button:nth-of-type(1):after{content:'小垚 2 周年聚餐\A 两年快乐加载完毕，蛋糕和大家都到齐啦！'}
 .joy-hotspots.cn-joy-list-mode>button:nth-of-type(2):before{content:'02'}

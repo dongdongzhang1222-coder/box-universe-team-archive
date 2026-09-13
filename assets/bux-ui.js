@@ -14,6 +14,15 @@
   var COLLAGE_VIDEO = './media/team-collage-motion.mp4';
   var DEFAULT_IDEA_ITEMS = [
     {
+      id: 'lingxi-boys',
+      kind: 'video',
+      src: './assets/idea-bank/lingxi-boys.mp4',
+      name: '灵皙的boys',
+      format: 'MP4',
+      size: '2.7 MiB',
+      note: '团队灵感视频 · 常驻'
+    },
+    {
       id: 'ai-anniversary',
       kind: 'video',
       parts: [
@@ -79,7 +88,7 @@
     }
   ];
   var CASE_STORAGE_KEY = 'box-universe-custom-cases-v1';
-  var INTERACTION_API = '';
+  var INTERACTION_API = 'https://box-universe-likes-api.dongdongzhang1222.workers.dev';
   var LIKE_STORAGE_KEY = 'box-universe-liked-cn-v3';
   var PLAYER_LABELS = {
     dongdong: '东东', gongning: '宫宁', lingxi: '灵皙',
