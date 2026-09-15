@@ -846,7 +846,7 @@
   function preloadJoyImages() {
     if (!q('.joy-screen')) return;
     if (joyImagePreloads.length) return;
-    ['./joy/xiaoyao-2years.jpg', './joy/team-building-2026.jpg'].forEach(function (src) {
+    ['./joy/xiaoyao-2years.jpg', './joy/team-building-2026.jpg', './joy/leo-birthday-2026.jpg', './joy/dongdong-3years.jpg', './joy/dongdong-3years-illustration.jpg'].forEach(function (src) {
       var image = new Image();
       image.decoding = 'async';
       image.src = src;

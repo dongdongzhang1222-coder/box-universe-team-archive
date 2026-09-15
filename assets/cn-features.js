@@ -14,14 +14,24 @@
   var latestUploads = [];
   var pendingJoyFile = null;
   var joyEditor = null;
-  var STATIC_JOY_ITEMS = [{
-    id: 'leo-birthday-2026',
-    type: 'image/jpeg',
-    url: './joy/leo-birthday-2026.jpg',
-    title: '两个狮子座的生日🎂',
-    description: '统统闪开，狮子驾到！',
-    static: true
-  }];
+  var STATIC_JOY_ITEMS = [
+    {
+      id: 'leo-birthday-2026',
+      type: 'image/jpeg',
+      url: './joy/leo-birthday-2026.jpg',
+      title: '两个狮子座的生日🎂',
+      description: '统统闪开，狮子驾到！',
+      static: true
+    },
+    {
+      id: 'dongdong-3years',
+      type: 'image/jpeg',
+      url: './joy/dongdong-3years.jpg',
+      title: '东东三周年',
+      description: '吃了好吃的韩餐。',
+      static: true
+    }
+  ];
 
   function fileToDataUrl(file) {
     return new Promise(function (resolve, reject) {
@@ -200,11 +210,50 @@
     now.textContent = 'NOW PLAYING / ' + String(number).padStart(2, '0') + '　' + (item.title || item.name);
   }
 
+  function buildJoySketch() {
+    var screen = q('.joy-screen');
+    if (!screen || q('.cn-joy-sketch', screen)) return;
+
+    var sticker = document.createElement('button');
+    sticker.type = 'button';
+    sticker.className = 'cn-joy-sketch';
+    sticker.setAttribute('aria-label', '查看东东三周年手绘纪念图');
+    sticker.innerHTML = '<span>MEMORY SKETCH</span><img src="./joy/dongdong-3years-illustration.jpg" alt="东东三周年团队手绘纪念图">';
+
+    var modal = document.createElement('div');
+    modal.className = 'cn-joy-sketch-modal';
+    modal.hidden = true;
+    modal.setAttribute('aria-hidden', 'true');
+    modal.innerHTML = '<button type="button" class="cn-joy-sketch-close" aria-label="关闭手绘纪念图">×</button>' +
+      '<figure><img src="./joy/dongdong-3years-illustration.jpg" alt="东东三周年团队手绘纪念图"><figcaption>MEMORY SKETCH / 东东三周年</figcaption></figure>';
+
+    function open() {
+      modal.hidden = false;
+      modal.setAttribute('aria-hidden', 'false');
+      requestAnimationFrame(function () { modal.classList.add('is-open'); });
+    }
+    function close() {
+      modal.classList.remove('is-open');
+      modal.setAttribute('aria-hidden', 'true');
+      setTimeout(function () { modal.hidden = true; }, 180);
+    }
+
+    sticker.addEventListener('click', open);
+    q('.cn-joy-sketch-close', modal).addEventListener('click', close);
+    modal.addEventListener('mousedown', function (event) { if (event.target === modal) close(); });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && !modal.hidden) close();
+    });
+    screen.appendChild(sticker);
+    document.body.appendChild(modal);
+  }
+
   function renderJoyArchive(items) {
     var oldGallery = q('.cn-joy-gallery');
     if (oldGallery) oldGallery.remove();
     var hotspots = q('.joy-hotspots');
     if (!hotspots) return;
+    buildJoySketch();
     qa('.cn-joy-upload-row', hotspots).forEach(function (node) { node.remove(); });
     var joyItems = STATIC_JOY_ITEMS.concat(items.filter(function (item) { return item.space === 'joy'; }));
     hotspots.classList.toggle('cn-joy-list-mode', joyItems.length > 0);
