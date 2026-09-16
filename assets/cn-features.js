@@ -1,6 +1,15 @@
 (function () {
   'use strict';
 
+  var launchParams = new URLSearchParams(location.search);
+  if (launchParams.get('launch') === '1') {
+    setTimeout(function () {
+      launchParams.delete('launch');
+      var cleanQuery = launchParams.toString();
+      history.replaceState(null, '', location.pathname + (cleanQuery ? '?' + cleanQuery : '') + location.hash);
+    }, 1500);
+  }
+
   function q(selector, root) { return (root || document).querySelector(selector); }
   function qa(selector, root) { return Array.from((root || document).querySelectorAll(selector)); }
   function api(path, options) {
@@ -14,6 +23,18 @@
   var latestUploads = [];
   var pendingJoyFile = null;
   var joyEditor = null;
+  var BUILT_IN_JOY_ITEMS = [
+    {
+      type: 'image/jpeg',
+      url: './joy/xiaoyao-2years.jpg',
+      title: '小垚 2 周年聚餐'
+    },
+    {
+      type: 'image/jpeg',
+      url: './joy/team-building-2026.jpg',
+      title: '26 年首次团建'
+    }
+  ];
   var STATIC_JOY_ITEMS = [
     {
       id: 'leo-birthday-2026',
@@ -210,6 +231,18 @@
     now.textContent = 'NOW PLAYING / ' + String(number).padStart(2, '0') + '　' + (item.title || item.name);
   }
 
+  function bindBuiltInJoyRows(hotspots) {
+    qa(':scope > button', hotspots).slice(0, BUILT_IN_JOY_ITEMS.length).forEach(function (button, index) {
+      if (button.dataset.cnJoyBound === '1') return;
+      button.dataset.cnJoyBound = '1';
+      button.type = 'button';
+      button.addEventListener('click', function (event) {
+        event.stopPropagation();
+        showJoyItem(BUILT_IN_JOY_ITEMS[index], index + 1);
+      });
+    });
+  }
+
   function buildJoySketch() {
     var screen = q('.joy-screen');
     if (!screen || q('.cn-joy-sketch', screen)) return;
@@ -254,6 +287,7 @@
     var hotspots = q('.joy-hotspots');
     if (!hotspots) return;
     buildJoySketch();
+    bindBuiltInJoyRows(hotspots);
     qa('.cn-joy-upload-row', hotspots).forEach(function (node) { node.remove(); });
     var joyItems = STATIC_JOY_ITEMS.concat(items.filter(function (item) { return item.space === 'joy'; }));
     hotspots.classList.toggle('cn-joy-list-mode', joyItems.length > 0);
