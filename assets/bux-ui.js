@@ -856,33 +856,18 @@
   }
 
   /* ============================================================
-     5. VIDEO — drop CLOSE, sound on by default
+     5. VIDEO — drop CLOSE, muted autoplay until SOUND ON
      ============================================================ */
-  var soundArmed = false;
   var SIGNAL_STILL = './design/video-paused.png';
 
-  function armUnmute(v) {
-    var go = function () {
-      v.muted = false;
-      removeEventListener('pointerdown', go, true);
-      removeEventListener('keydown', go, true);
-    };
-    addEventListener('pointerdown', go, true);
-    addEventListener('keydown', go, true);
-  }
-
   function autoplaySignal(v) {
-    // PRESS START already counted as a user gesture, so sound-on autoplay
-    // normally sticks; if the policy still refuses, fall back to muted.
-    v.muted = false;
+    // Keep autoplay browser-safe and predictable: sound is enabled only
+    // after the visitor explicitly presses the SOUND ON control.
+    v.muted = true;
+    v.setAttribute('muted', '');
     var p = v.play();
     if (!p || !p.catch) return;
-    p.catch(function () {
-      v.muted = true;
-      var q2 = v.play();
-      if (q2 && q2.catch) q2.catch(function () {});
-      armUnmute(v);
-    });
+    p.catch(function () {});
   }
 
   function setupSignalVideo() {
@@ -924,9 +909,6 @@
           b.setAttribute('tabindex', '-1');
           b.setAttribute('aria-hidden', 'true');
         }
-      } else if (!soundArmed && /SOUND OFF|打开视频声音/.test(t)) {
-        soundArmed = true;                 // flip React state once -> sound on
-        b.click();
       }
     });
     setupSignalVideo();
