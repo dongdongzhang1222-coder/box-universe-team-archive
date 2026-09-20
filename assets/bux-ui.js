@@ -97,7 +97,6 @@
   var customCases = loadCustomCases();
   var caseEditor = null;
   var caseEditorResetting = false;
-  var joyImagePreloads = [];
 
   /* ---------- tiny helpers ---------- */
   function el(tag, cls, text) {
@@ -137,6 +136,7 @@
   }
 
   function loadSharedCases() {
+    if (/\.github\.io$/i.test(location.hostname)) return Promise.resolve();
     fetch('/api/cases', { cache: 'no-store' })
       .then(function (response) { if (!response.ok) throw new Error('cases'); return response.json(); })
       .then(function (data) {
@@ -536,10 +536,16 @@
   }
 
   function optimizeImages() {
-    qa('.player-orbits img, .case-grid img, .modal-cases img, .collage-layer').forEach(function (img) {
+    qa('.art-base, .player-orbits img, .case-grid img, .modal-cases img, .collage-layer, .joy-media img, .cn-joy-gallery img').forEach(function (img) {
       if (!img.hasAttribute('loading')) img.loading = 'lazy';
       if (!img.hasAttribute('decoding')) img.decoding = 'async';
+      if (!img.hasAttribute('fetchpriority')) img.setAttribute('fetchpriority', 'low');
     });
+    var entryArtwork = q('.entry-page > img');
+    if (entryArtwork) {
+      entryArtwork.decoding = 'async';
+      entryArtwork.setAttribute('fetchpriority', 'high');
+    }
     var aboutVideo = q('video.about-video');
     if (aboutVideo && !aboutVideo.hasAttribute('preload')) aboutVideo.preload = 'metadata';
   }
@@ -606,27 +612,45 @@
       video.src = item.src;
       return;
     }
-    video.setAttribute('data-bux-loading', '1');
-    var parts = [];
-    item.parts.reduce(function (chain, path) {
-      return chain.then(function () {
-        return fetch(path).then(function (response) {
-          if (!response.ok) throw new Error('Missing video segment: ' + path);
-          return response.arrayBuffer();
-        }).then(function (bytes) {
-          parts.push(bytes);
+    var loading = null;
+    video.preload = 'none';
+    video.setAttribute('data-bux-deferred', '1');
+    video.buxLoad = function () {
+      if (video.src) return Promise.resolve();
+      if (loading) return loading;
+      video.setAttribute('data-bux-loading', '1');
+      var parts = [];
+      loading = item.parts.reduce(function (chain, path) {
+        return chain.then(function () {
+          return fetch(path).then(function (response) {
+            if (!response.ok) throw new Error('Missing video segment: ' + path);
+            return response.arrayBuffer();
+          }).then(function (bytes) {
+            parts.push(bytes);
+          });
         });
+      }, Promise.resolve()).then(function () {
+        if (!video.isConnected) return;
+        video.src = URL.createObjectURL(new Blob(parts, { type: 'video/mp4' }));
+        video.removeAttribute('data-bux-loading');
+        video.removeAttribute('data-bux-deferred');
+        video.load();
+      }).catch(function (error) {
+        loading = null;
+        video.removeAttribute('data-bux-loading');
+        video.setAttribute('data-bux-media-error', '1');
+        video.setAttribute('aria-label', item.name + ' 加载失败');
+        throw error;
       });
-    }, Promise.resolve()).then(function () {
-      if (!video.isConnected) return;
-      video.src = URL.createObjectURL(new Blob(parts, { type: 'video/mp4' }));
-      video.removeAttribute('data-bux-loading');
-      video.load();
-    }).catch(function () {
-      video.removeAttribute('data-bux-loading');
-      video.setAttribute('data-bux-media-error', '1');
-      video.setAttribute('aria-label', item.name + ' 加载失败');
-    });
+      return loading;
+    };
+    var startDeferredVideo = function () {
+      video.buxLoad().then(function () { return video.play(); }).catch(function () {});
+    };
+    video.addEventListener('pointerdown', startDeferredVideo, { once: true });
+    video.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter' || event.key === ' ') startDeferredVideo();
+    }, { once: true });
   }
 
   /* ============================================================
@@ -843,18 +867,6 @@
     });
   }
 
-  function preloadJoyImages() {
-    if (!q('.joy-screen')) return;
-    if (joyImagePreloads.length) return;
-    ['./joy/xiaoyao-2years.jpg', './joy/team-building-2026.jpg', './joy/leo-birthday-2026.jpg', './joy/dongdong-3years.jpg', './joy/dongdong-3years-illustration.jpg'].forEach(function (src) {
-      var image = new Image();
-      image.decoding = 'async';
-      image.src = src;
-      joyImagePreloads.push(image);
-      if (typeof image.decode === 'function') image.decode().catch(function () {});
-    });
-  }
-
   /* ============================================================
      5. VIDEO — drop CLOSE, muted autoplay until SOUND ON
      ============================================================ */
@@ -891,7 +903,7 @@
     if (!v.hasAttribute('data-bux-signal')) {
       v.setAttribute('data-bux-signal', '1');
       v.setAttribute('playsinline', '');
-      v.preload = 'auto';
+      v.preload = 'metadata';
       ['play', 'playing', 'pause', 'ended', 'emptied', 'loadeddata'].forEach(function (t) {
         v.addEventListener(t, sync);
       });
@@ -994,7 +1006,7 @@
         media = el('video');
         media.controls = true;
         media.playsInline = true;
-        media.preload = 'metadata';
+        media.preload = 'none';
         media.setAttribute('controlsList', 'nodownload noplaybackrate');
         media.setAttribute('aria-label', item.name + ' 视频预览');
         loadIdeaVideo(media, item);
@@ -1021,7 +1033,8 @@
         fs.addEventListener('click', function () {
           var r = media.requestFullscreen || media.webkitRequestFullscreen || media.webkitEnterFullscreen;
           if (r) { try { r.call(media); } catch (_) {} }
-          media.play().catch(function () {});
+          var ready = media.buxLoad ? media.buxLoad() : Promise.resolve();
+          ready.then(function () { return media.play(); }).catch(function () {});
         });
         row.appendChild(fs);
       } else {
@@ -1234,8 +1247,22 @@
           }
         });
     }
-    refreshState();
-    setInterval(refreshState, 15000);
+    var refreshTimer = 0;
+    var startInteractions = function () {
+      if (refreshTimer) return;
+      refreshState();
+      refreshTimer = setInterval(refreshState, 15000);
+    };
+    if (typeof IntersectionObserver === 'function') {
+      var interactionObserver = new IntersectionObserver(function (entries) {
+        if (!entries.some(function (entry) { return entry.isIntersecting; })) return;
+        interactionObserver.disconnect();
+        startInteractions();
+      }, { rootMargin: '400px 0px' });
+      interactionObserver.observe(section);
+    } else {
+      startInteractions();
+    }
 
     like.addEventListener('click', function () {
       if (liked) return;
@@ -1303,7 +1330,6 @@
     decorateCaseCards();
     decorateModal();
     syncJoyActive();
-    preloadJoyImages();
     decorateVideo();
     buildDefaultIdeaCards();
     addDeleteButtons();

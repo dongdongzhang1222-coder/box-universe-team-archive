@@ -2,6 +2,7 @@
   'use strict';
 
   var launchParams = new URLSearchParams(location.search);
+  var STATIC_HOST = /\.github\.io$/i.test(location.hostname);
   if (launchParams.get('launch') === '1') {
     setTimeout(function () {
       launchParams.delete('launch');
@@ -69,7 +70,7 @@
     button.className = 'xiaoliao-dock';
     button.type = 'button';
     button.setAttribute('aria-label', '打开小料自取');
-    button.innerHTML = '<span class="xiaoliao-art"><img src="./assets/resources/xiaoliao-screen-mobile.png" width="384" height="368" alt="小料自取"></span>';
+    button.innerHTML = '<span class="xiaoliao-art"><img src="./assets/resources/xiaoliao-screen-mobile.png" width="384" height="368" decoding="async" fetchpriority="low" alt="小料自取"></span>';
 
     var modal = document.createElement('div');
     modal.className = 'xiaoliao-modal';
@@ -80,8 +81,8 @@
         '<button class="xiaoliao-close" type="button" aria-label="关闭">×</button>' +
         '<header><p>RESOURCE STATION / 团队资料站</p><h2 id="xiaoliao-title">小料自取</h2><span>品牌资料可直接预览，或下载到本地慢慢看。</span></header>' +
         '<div class="xiaoliao-list">' +
-          '<article><span>PDF · 44 页 · 18.4 MB</span><h3>淘宝 IP 淘小宝规范手册 2026</h3><p>完整原版文件</p><div><a href="./assets/resources/taoxiaobao-brand-guide-2026.pdf" target="_blank" rel="noreferrer">在线预览</a><a href="./assets/resources/taoxiaobao-brand-guide-2026.pdf" download="淘宝IP淘小宝规范手册2026.pdf">下载原版</a></div></article>' +
-          '<article><span>PDF · 59 页 · 网页优化版 9.6 MB</span><h3>2026 淘宝品牌规范</h3><p>完整页数，适合网页预览与下载</p><div><a href="./assets/resources/taobao-brand-guide-2026-preview.pdf" target="_blank" rel="noreferrer">快速预览</a><a href="./assets/resources/taobao-brand-guide-2026-preview.pdf" download="2026淘宝品牌规范.pdf">下载 PDF</a></div></article>' +
+          '<article><span>PDF · 44 页 · 压缩版 17.4 MiB</span><h3>淘宝 IP 淘小宝规范手册 2026</h3><p>完整页数，已优化网页预览</p><div><a href="./assets/resources/taoxiaobao-brand-guide-2026.pdf" target="_blank" rel="noreferrer">在线预览</a><a href="./assets/resources/taoxiaobao-brand-guide-2026.pdf" download="淘宝IP淘小宝规范手册2026.pdf">下载 PDF</a></div></article>' +
+          '<article><span>PDF · 59 页 · 压缩版 9.1 MiB</span><h3>2026 淘宝品牌规范</h3><p>完整页数，适合网页预览与下载</p><div><a href="./assets/resources/taobao-brand-guide-2026-preview.pdf" target="_blank" rel="noreferrer">快速预览</a><a href="./assets/resources/taobao-brand-guide-2026-preview.pdf" download="2026淘宝品牌规范.pdf">下载 PDF</a></div></article>' +
         '</div>' +
       '</section>';
     document.body.appendChild(button);
@@ -384,14 +385,16 @@
 
   function init() {
     buildResourceDock();
-    bindPersistentUploads();
-    loadUploads();
+    if (!STATIC_HOST) {
+      bindPersistentUploads();
+      loadUploads();
+    }
     var observer = new MutationObserver(function () {
       if (!q('.idea-bank') || !q('.joy-screen')) return;
       observer.disconnect();
       renderSharedUploads(latestUploads);
       var status = q('.idea-status');
-      if (status) status.textContent = '上传内容会持久保存到团队共享空间，刷新或重新打开后仍可查看。';
+      if (status && !STATIC_HOST) status.textContent = '上传内容会持久保存到团队共享空间，刷新或重新打开后仍可查看。';
     });
     observer.observe(document.body, { childList: true, subtree: true });
   }
