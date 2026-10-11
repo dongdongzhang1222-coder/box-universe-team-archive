@@ -547,7 +547,7 @@
       entryArtwork.setAttribute('fetchpriority', 'high');
     }
     var aboutVideo = q('video.about-video');
-    if (aboutVideo && !aboutVideo.hasAttribute('preload')) aboutVideo.preload = 'metadata';
+    if (aboutVideo && !aboutVideo.hasAttribute('preload')) aboutVideo.preload = 'none';
   }
 
   function setupEntryButton() {
@@ -870,7 +870,7 @@
   /* ============================================================
      5. VIDEO — drop CLOSE, muted autoplay until SOUND ON
      ============================================================ */
-  var SIGNAL_STILL = './design/video-paused.png';
+  var SIGNAL_STILL = './design/video-paused.jpg';
 
   function autoplaySignal(v) {
     // Keep autoplay browser-safe and predictable: sound is enabled only
@@ -1085,7 +1085,7 @@
     v.setAttribute('muted', '');
     v.setAttribute('playsinline', '');
     v.setAttribute('aria-label', 'BOX 档案动态影像');
-    v.poster = './design/box.png';
+    v.poster = './design/box.jpg';
     v.preload = 'none';
     sec.appendChild(v);
     sec.classList.add('bux-has-archive-video');
@@ -1120,7 +1120,7 @@
     v.setAttribute('muted', '');
     v.setAttribute('playsinline', '');
     v.setAttribute('aria-hidden', 'true');
-    v.poster = './design/team-collage.png';
+    v.poster = './design/team-collage.jpg';
     v.preload = 'none';
     sec.appendChild(v);
     sec.classList.add('bux-has-video');
