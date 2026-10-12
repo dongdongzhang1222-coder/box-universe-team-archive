@@ -70,7 +70,7 @@
     button.className = 'xiaoliao-dock';
     button.type = 'button';
     button.setAttribute('aria-label', '打开小料自取');
-    button.innerHTML = '<span class="xiaoliao-art"><img src="./assets/resources/xiaoliao-screen-mobile.png" width="384" height="368" decoding="async" fetchpriority="low" alt="小料自取"></span>';
+    button.innerHTML = '<span class="xiaoliao-art"><img src="./assets/resources/xiaoliao-screen-mobile.webp" width="384" height="368" decoding="async" fetchpriority="low" alt="小料自取"></span>';
 
     var modal = document.createElement('div');
     modal.className = 'xiaoliao-modal';
@@ -252,14 +252,14 @@
     sticker.type = 'button';
     sticker.className = 'cn-joy-sketch';
     sticker.setAttribute('aria-label', '查看东东三周年手绘纪念图');
-    sticker.innerHTML = '<span>MEMORY SKETCH</span><img src="./joy/dongdong-3years-illustration.jpg" alt="东东三周年团队手绘纪念图">';
+    sticker.innerHTML = '<span>MEMORY SKETCH</span><img src="./joy/dongdong-3years-illustration.webp" alt="东东三周年团队手绘纪念图">';
 
     var modal = document.createElement('div');
     modal.className = 'cn-joy-sketch-modal';
     modal.hidden = true;
     modal.setAttribute('aria-hidden', 'true');
     modal.innerHTML = '<button type="button" class="cn-joy-sketch-close" aria-label="关闭手绘纪念图">×</button>' +
-      '<figure><img src="./joy/dongdong-3years-illustration.jpg" alt="东东三周年团队手绘纪念图"><figcaption>MEMORY SKETCH / 东东三周年</figcaption></figure>';
+      '<figure><img src="./joy/dongdong-3years-illustration.webp" alt="东东三周年团队手绘纪念图"><figcaption>MEMORY SKETCH / 东东三周年</figcaption></figure>';
 
     function open() {
       modal.hidden = false;

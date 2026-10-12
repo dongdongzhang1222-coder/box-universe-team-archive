@@ -61,7 +61,7 @@
       title: '亚宠展｜宝贝的可爱，宝贝来宠爱',
       url: 'https://www.digitaling.com/projects/376361.html',
       members: ['gongning', 'qiegao'],
-      image: './caseboard/pet-fair-cuteness.jpg',
+      image: './caseboard/pet-fair-cuteness.webp',
       date: '2026.08.31',
       type: '宠物营销 / AI 营销',
       sortRank: 1
@@ -71,7 +71,7 @@
       title: '淘小宝 × 娃三岁“盒”作联名',
       url: 'https://www.digitaling.com/projects/376375.html',
       members: ['lingxi'],
-      image: './caseboard/xiaobao-wa3-collab.jpg',
+      image: './caseboard/xiaobao-wa3-collab.webp',
       date: '2026.08.31',
       type: 'IP 联名 / 产品营销',
       sortRank: 2
@@ -81,7 +81,7 @@
       title: '淘宝开了家串串香',
       url: 'https://www.digitaling.com/projects/373197.html',
       members: ['qiegao', 'xiaoyao'],
-      image: './caseboard/taobao-skewer-shop.jpg',
+      image: './caseboard/taobao-skewer-shop.webp',
       date: '2026.07.20',
       type: '线下体验 / 兴趣营销',
       sortRank: 3
@@ -870,7 +870,7 @@
   /* ============================================================
      5. VIDEO — drop CLOSE, muted autoplay until SOUND ON
      ============================================================ */
-  var SIGNAL_STILL = './design/video-paused.jpg';
+  var SIGNAL_STILL = './design/video-paused.webp';
 
   function autoplaySignal(v) {
     // Keep autoplay browser-safe and predictable: sound is enabled only
