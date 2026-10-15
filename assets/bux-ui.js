@@ -55,7 +55,7 @@
     {
       id: 'mid-autumn-more',
       title: '宝贝让中秋多一点',
-      url: 'https://www.digitaling.com/company/projects/10845/latest/1',
+      url: 'https://www.digitaling.com/projects/379336.html',
       members: ['sisi', 'lingxi'],
       image: './caseboard/mid-autumn-more.webp',
       date: '2026.10',
