@@ -23,20 +23,6 @@
       note: '团队灵感视频 · 常驻'
     },
     {
-      id: 'ai-anniversary',
-      kind: 'video',
-      parts: [
-        './assets/idea-bank/ai-anniversary.part-00',
-        './assets/idea-bank/ai-anniversary.part-01',
-        './assets/idea-bank/ai-anniversary.part-02',
-        './assets/idea-bank/ai-anniversary.part-03'
-      ],
-      name: 'AI周年视频',
-      format: 'MP4',
-      size: '47.4 MiB',
-      note: '团队 16 周年存档 · 常驻'
-    },
-    {
       id: 'ai-website-handbook',
       kind: 'docx',
       src: './assets/idea-bank/ai-website-handbook.docx',
@@ -56,6 +42,26 @@
     }
   ];
   var STATIC_CASE_ITEMS = [
+    {
+      id: 'baby-slip-away',
+      title: '宝贝先开溜',
+      url: 'https://www.digitaling.com/projects/379112.html',
+      members: ['sisi', 'lingxi'],
+      image: './caseboard/baby-slip-away.webp',
+      date: '2026.09',
+      type: '服饰营销 / AI 营销',
+      sortRank: 1
+    },
+    {
+      id: 'mid-autumn-more',
+      title: '宝贝让中秋多一点',
+      url: 'https://www.digitaling.com/company/projects/10845/latest/1',
+      members: ['sisi', 'lingxi'],
+      image: './caseboard/mid-autumn-more.webp',
+      date: '2026.10',
+      type: '中秋营销 / IP 营销',
+      sortRank: 1
+    },
     {
       id: 'pet-fair-cuteness',
       title: '亚宠展｜宝贝的可爱，宝贝来宠爱',
@@ -153,7 +159,8 @@
   }
 
   function sortDate(value) {
-    return Number(String(value || '').replace(/[^0-9]/g, '')) || 0;
+    var parts = String(value || '').match(/\d+/g) || [];
+    return (Number(parts[0]) || 0) * 10000 + (Number(parts[1]) || 0) * 100 + (Number(parts[2]) || 0);
   }
 
   function makeCaseCard(item, isCustom) {

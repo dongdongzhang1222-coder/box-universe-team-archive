@@ -17,6 +17,8 @@
     "./characters/qiegao.webp",
     "./characters/sisi-clean.webp",
     "./characters/xiaoyao-pink-flamingo.webp",
+    "./caseboard/baby-slip-away.webp",
+    "./caseboard/mid-autumn-more.webp",
     "./caseboard/pet-fair-cuteness.webp",
     "./caseboard/xiaobao-wa3-collab.webp",
     "./caseboard/taobao-skewer-shop.webp",
