@@ -12,7 +12,7 @@
     "./design/video-closed.webp",
     "./design/video-paused.webp",
     "./characters/dongdong-clean.webp",
-    "./characters/gongning-farewell.webp",
+    "./characters/gongning-20261026.png",
     "./characters/lingxi.webp",
     "./characters/qiegao.webp",
     "./characters/sisi-clean.webp",
