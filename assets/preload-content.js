@@ -5,14 +5,13 @@
 
   var assets = [
     "./design/box.webp",
-    "./design/team-collage.webp",
-    "./assets/recruit-banner-blue.webp",
+    "./design/team-collage.jpg",
     "./design/joy.webp",
     "./design/end.webp",
     "./design/video-closed.webp",
     "./design/video-paused.webp",
     "./characters/dongdong-clean.webp",
-    "./characters/gongning-20261026.png",
+    "./characters/gongning-20261026.jpg",
     "./characters/lingxi.webp",
     "./characters/qiegao.webp",
     "./characters/sisi-clean.webp",
