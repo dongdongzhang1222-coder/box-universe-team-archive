@@ -17,6 +17,7 @@
     "./characters/sisi-clean.webp",
     "./characters/xiaoyao-pink-flamingo.webp",
     "./caseboard/baby-slip-away.webp",
+    "./assets/recruit-banner-blue.webp",
     "./caseboard/mid-autumn-more.webp",
     "./caseboard/pet-fair-cuteness.webp",
     "./caseboard/xiaobao-wa3-collab.webp",

@@ -57,6 +57,26 @@
   ];
   var STATIC_CASE_ITEMS = [
     {
+      id: 'baby-slip-away',
+      title: '宝贝先开溜',
+      url: 'https://www.digitaling.com/projects/379112.html',
+      members: ['sisi', 'lingxi'],
+      image: './caseboard/baby-slip-away.webp',
+      date: '2026.09',
+      type: '国庆营销 / AI 营销',
+      sortRank: 1
+    },
+    {
+      id: 'mid-autumn-more',
+      title: '宝贝让中秋多一点',
+      url: 'https://www.digitaling.com/projects/379336.html',
+      members: ['sisi', 'lingxi'],
+      image: './caseboard/mid-autumn-more.webp',
+      date: '2026.09',
+      type: '中秋营销 / IP 营销',
+      sortRank: 2
+    },
+    {
       id: 'pet-fair-cuteness',
       title: '亚宠展｜宝贝的可爱，宝贝来宠爱',
       url: 'https://www.digitaling.com/projects/376361.html',
