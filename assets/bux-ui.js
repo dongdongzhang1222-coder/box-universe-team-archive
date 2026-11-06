@@ -14,13 +14,18 @@
   var COLLAGE_VIDEO = './media/team-collage-motion.mp4';
   var DEFAULT_IDEA_ITEMS = [
     {
-      id: 'lingxi-boys',
+      id: 'ai-anniversary',
       kind: 'video',
-      src: './assets/idea-bank/lingxi-boys.mp4',
-      name: '灵皙的boys',
+      parts: [
+        './assets/idea-bank/ai-anniversary.part-00',
+        './assets/idea-bank/ai-anniversary.part-01',
+        './assets/idea-bank/ai-anniversary.part-02',
+        './assets/idea-bank/ai-anniversary.part-03'
+      ],
+      name: 'AI周年视频',
       format: 'MP4',
-      size: '2.7 MiB',
-      note: '团队灵感视频 · 常驻'
+      size: '47.4 MiB',
+      note: '团队 16 周年存档 · 常驻'
     },
     {
       id: 'ai-website-handbook',
@@ -39,35 +44,24 @@
       format: 'MP4',
       size: '3.5 MiB',
       note: '团队热舞影像 · 常驻'
+    },
+    {
+      id: 'xiaobao-dance',
+      kind: 'video',
+      src: './media/xiaobao-dance-2026.mp4',
+      name: '淘小宝跳舞视频',
+      format: 'MP4',
+      size: '3.4 MiB',
+      note: '品牌 IP 热舞影像 · 常驻'
     }
   ];
   var STATIC_CASE_ITEMS = [
-    {
-      id: 'baby-slip-away',
-      title: '宝贝先开溜',
-      url: 'https://www.digitaling.com/projects/379112.html',
-      members: ['sisi', 'lingxi'],
-      image: './caseboard/baby-slip-away.webp',
-      date: '2026.09',
-      type: '服饰营销 / AI 营销',
-      sortRank: 1
-    },
-    {
-      id: 'mid-autumn-more',
-      title: '宝贝让中秋多一点',
-      url: 'https://www.digitaling.com/projects/379336.html',
-      members: ['sisi', 'lingxi'],
-      image: './caseboard/mid-autumn-more.webp',
-      date: '2026.10',
-      type: '中秋营销 / IP 营销',
-      sortRank: 1
-    },
     {
       id: 'pet-fair-cuteness',
       title: '亚宠展｜宝贝的可爱，宝贝来宠爱',
       url: 'https://www.digitaling.com/projects/376361.html',
       members: ['gongning', 'qiegao'],
-      image: './caseboard/pet-fair-cuteness.webp',
+      image: './caseboard/pet-fair-cuteness.jpg',
       date: '2026.08.31',
       type: '宠物营销 / AI 营销',
       sortRank: 1
@@ -77,7 +71,7 @@
       title: '淘小宝 × 娃三岁“盒”作联名',
       url: 'https://www.digitaling.com/projects/376375.html',
       members: ['lingxi'],
-      image: './caseboard/xiaobao-wa3-collab.webp',
+      image: './caseboard/xiaobao-wa3-collab.jpg',
       date: '2026.08.31',
       type: 'IP 联名 / 产品营销',
       sortRank: 2
@@ -87,14 +81,14 @@
       title: '淘宝开了家串串香',
       url: 'https://www.digitaling.com/projects/373197.html',
       members: ['qiegao', 'xiaoyao'],
-      image: './caseboard/taobao-skewer-shop.webp',
+      image: './caseboard/taobao-skewer-shop.jpg',
       date: '2026.07.20',
       type: '线下体验 / 兴趣营销',
       sortRank: 3
     }
   ];
   var CASE_STORAGE_KEY = 'box-universe-custom-cases-v1';
-  var INTERACTION_API = 'https://box-universe-likes-api.dongdongzhang1222.workers.dev';
+  var INTERACTION_API = '';
   var LIKE_STORAGE_KEY = 'box-universe-liked-cn-v3';
   var PLAYER_LABELS = {
     dongdong: '东东', gongning: '宫宁', lingxi: '灵皙',
@@ -103,6 +97,7 @@
   var customCases = loadCustomCases();
   var caseEditor = null;
   var caseEditorResetting = false;
+  var joyImagePreloads = [];
 
   /* ---------- tiny helpers ---------- */
   function el(tag, cls, text) {
@@ -142,7 +137,6 @@
   }
 
   function loadSharedCases() {
-    if (/\.github\.io$/i.test(location.hostname)) return Promise.resolve();
     fetch('/api/cases', { cache: 'no-store' })
       .then(function (response) { if (!response.ok) throw new Error('cases'); return response.json(); })
       .then(function (data) {
@@ -159,8 +153,7 @@
   }
 
   function sortDate(value) {
-    var parts = String(value || '').match(/\d+/g) || [];
-    return (Number(parts[0]) || 0) * 10000 + (Number(parts[1]) || 0) * 100 + (Number(parts[2]) || 0);
+    return Number(String(value || '').replace(/[^0-9]/g, '')) || 0;
   }
 
   function makeCaseCard(item, isCustom) {
@@ -529,7 +522,7 @@
     }
     var copy = q('.galaxy-copy', section);
     if (copy && !q('.bux-player-order', copy)) {
-      var order = el('small', 'bux-player-order', '玩家按拼音首字母排序');
+      var order = el('small', 'bux-player-order', '宫宁是最后一位玩家');
       galaxyTitle.insertAdjacentElement('afterend', order);
     }
   }
@@ -543,18 +536,12 @@
   }
 
   function optimizeImages() {
-    qa('.art-base, .player-orbits img, .case-grid img, .modal-cases img, .collage-layer, .joy-media img, .cn-joy-gallery img').forEach(function (img) {
+    qa('.player-orbits img, .case-grid img, .modal-cases img, .collage-layer').forEach(function (img) {
       if (!img.hasAttribute('loading')) img.loading = 'lazy';
       if (!img.hasAttribute('decoding')) img.decoding = 'async';
-      if (!img.hasAttribute('fetchpriority')) img.setAttribute('fetchpriority', 'low');
     });
-    var entryArtwork = q('.entry-page > img');
-    if (entryArtwork) {
-      entryArtwork.decoding = 'async';
-      entryArtwork.setAttribute('fetchpriority', 'high');
-    }
     var aboutVideo = q('video.about-video');
-    if (aboutVideo && !aboutVideo.hasAttribute('preload')) aboutVideo.preload = 'none';
+    if (aboutVideo && !aboutVideo.hasAttribute('preload')) aboutVideo.preload = 'metadata';
   }
 
   function setupEntryButton() {
@@ -619,45 +606,27 @@
       video.src = item.src;
       return;
     }
-    var loading = null;
-    video.preload = 'none';
-    video.setAttribute('data-bux-deferred', '1');
-    video.buxLoad = function () {
-      if (video.src) return Promise.resolve();
-      if (loading) return loading;
-      video.setAttribute('data-bux-loading', '1');
-      var parts = [];
-      loading = item.parts.reduce(function (chain, path) {
-        return chain.then(function () {
-          return fetch(path).then(function (response) {
-            if (!response.ok) throw new Error('Missing video segment: ' + path);
-            return response.arrayBuffer();
-          }).then(function (bytes) {
-            parts.push(bytes);
-          });
+    video.setAttribute('data-bux-loading', '1');
+    var parts = [];
+    item.parts.reduce(function (chain, path) {
+      return chain.then(function () {
+        return fetch(path).then(function (response) {
+          if (!response.ok) throw new Error('Missing video segment: ' + path);
+          return response.arrayBuffer();
+        }).then(function (bytes) {
+          parts.push(bytes);
         });
-      }, Promise.resolve()).then(function () {
-        if (!video.isConnected) return;
-        video.src = URL.createObjectURL(new Blob(parts, { type: 'video/mp4' }));
-        video.removeAttribute('data-bux-loading');
-        video.removeAttribute('data-bux-deferred');
-        video.load();
-      }).catch(function (error) {
-        loading = null;
-        video.removeAttribute('data-bux-loading');
-        video.setAttribute('data-bux-media-error', '1');
-        video.setAttribute('aria-label', item.name + ' 加载失败');
-        throw error;
       });
-      return loading;
-    };
-    var startDeferredVideo = function () {
-      video.buxLoad().then(function () { return video.play(); }).catch(function () {});
-    };
-    video.addEventListener('pointerdown', startDeferredVideo, { once: true });
-    video.addEventListener('keydown', function (event) {
-      if (event.key === 'Enter' || event.key === ' ') startDeferredVideo();
-    }, { once: true });
+    }, Promise.resolve()).then(function () {
+      if (!video.isConnected) return;
+      video.src = URL.createObjectURL(new Blob(parts, { type: 'video/mp4' }));
+      video.removeAttribute('data-bux-loading');
+      video.load();
+    }).catch(function () {
+      video.removeAttribute('data-bux-loading');
+      video.setAttribute('data-bux-media-error', '1');
+      video.setAttribute('aria-label', item.name + ' 加载失败');
+    });
   }
 
   /* ============================================================
@@ -874,19 +843,46 @@
     });
   }
 
+  function preloadJoyImages() {
+    if (!q('.joy-screen')) return;
+    if (joyImagePreloads.length) return;
+    ['./joy/xiaoyao-2years.jpg', './joy/team-building-2026.jpg'].forEach(function (src) {
+      var image = new Image();
+      image.decoding = 'async';
+      image.src = src;
+      joyImagePreloads.push(image);
+      if (typeof image.decode === 'function') image.decode().catch(function () {});
+    });
+  }
+
   /* ============================================================
-     5. VIDEO — drop CLOSE, muted autoplay until SOUND ON
+     5. VIDEO — drop CLOSE, sound on by default
      ============================================================ */
-  var SIGNAL_STILL = './design/video-paused.webp';
+  var soundArmed = false;
+  var SIGNAL_STILL = './design/video-paused.png';
+
+  function armUnmute(v) {
+    var go = function () {
+      v.muted = false;
+      removeEventListener('pointerdown', go, true);
+      removeEventListener('keydown', go, true);
+    };
+    addEventListener('pointerdown', go, true);
+    addEventListener('keydown', go, true);
+  }
 
   function autoplaySignal(v) {
-    // Keep autoplay browser-safe and predictable: sound is enabled only
-    // after the visitor explicitly presses the SOUND ON control.
-    v.muted = true;
-    v.setAttribute('muted', '');
+    // PRESS START already counted as a user gesture, so sound-on autoplay
+    // normally sticks; if the policy still refuses, fall back to muted.
+    v.muted = false;
     var p = v.play();
     if (!p || !p.catch) return;
-    p.catch(function () {});
+    p.catch(function () {
+      v.muted = true;
+      var q2 = v.play();
+      if (q2 && q2.catch) q2.catch(function () {});
+      armUnmute(v);
+    });
   }
 
   function setupSignalVideo() {
@@ -910,7 +906,7 @@
     if (!v.hasAttribute('data-bux-signal')) {
       v.setAttribute('data-bux-signal', '1');
       v.setAttribute('playsinline', '');
-      v.preload = 'metadata';
+      v.preload = 'auto';
       ['play', 'playing', 'pause', 'ended', 'emptied', 'loadeddata'].forEach(function (t) {
         v.addEventListener(t, sync);
       });
@@ -928,6 +924,9 @@
           b.setAttribute('tabindex', '-1');
           b.setAttribute('aria-hidden', 'true');
         }
+      } else if (!soundArmed && /SOUND OFF|打开视频声音/.test(t)) {
+        soundArmed = true;                 // flip React state once -> sound on
+        b.click();
       }
     });
     setupSignalVideo();
@@ -1013,7 +1012,7 @@
         media = el('video');
         media.controls = true;
         media.playsInline = true;
-        media.preload = 'none';
+        media.preload = 'metadata';
         media.setAttribute('controlsList', 'nodownload noplaybackrate');
         media.setAttribute('aria-label', item.name + ' 视频预览');
         loadIdeaVideo(media, item);
@@ -1040,8 +1039,7 @@
         fs.addEventListener('click', function () {
           var r = media.requestFullscreen || media.webkitRequestFullscreen || media.webkitEnterFullscreen;
           if (r) { try { r.call(media); } catch (_) {} }
-          var ready = media.buxLoad ? media.buxLoad() : Promise.resolve();
-          ready.then(function () { return media.play(); }).catch(function () {});
+          media.play().catch(function () {});
         });
         row.appendChild(fs);
       } else {
@@ -1092,7 +1090,7 @@
     v.setAttribute('muted', '');
     v.setAttribute('playsinline', '');
     v.setAttribute('aria-label', 'BOX 档案动态影像');
-    v.poster = './design/box.jpg';
+    v.poster = './design/box.png';
     v.preload = 'none';
     sec.appendChild(v);
     sec.classList.add('bux-has-archive-video');
@@ -1127,7 +1125,7 @@
     v.setAttribute('muted', '');
     v.setAttribute('playsinline', '');
     v.setAttribute('aria-hidden', 'true');
-    v.poster = './design/team-collage.jpg';
+    v.poster = './design/team-collage.png';
     v.preload = 'none';
     sec.appendChild(v);
     sec.classList.add('bux-has-video');
@@ -1254,22 +1252,8 @@
           }
         });
     }
-    var refreshTimer = 0;
-    var startInteractions = function () {
-      if (refreshTimer) return;
-      refreshState();
-      refreshTimer = setInterval(refreshState, 15000);
-    };
-    if (typeof IntersectionObserver === 'function') {
-      var interactionObserver = new IntersectionObserver(function (entries) {
-        if (!entries.some(function (entry) { return entry.isIntersecting; })) return;
-        interactionObserver.disconnect();
-        startInteractions();
-      }, { rootMargin: '400px 0px' });
-      interactionObserver.observe(section);
-    } else {
-      startInteractions();
-    }
+    refreshState();
+    setInterval(refreshState, 15000);
 
     like.addEventListener('click', function () {
       if (liked) return;
@@ -1332,17 +1316,16 @@
     syncPlayerHeading();
     syncTopSignature();
     optimizeImages();
-    buildCaseEditor();
     syncCaseArchive();
     decorateCaseCards();
     decorateModal();
     syncJoyActive();
+    preloadJoyImages();
     decorateVideo();
     buildDefaultIdeaCards();
     addDeleteButtons();
     syncIdeaCount();
     buildBoxArchiveVideo();
-    buildCollageVideo();
     buildInteractions();
   }
 

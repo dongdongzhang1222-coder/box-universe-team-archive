@@ -539,7 +539,7 @@
       /* ---------- 4.9 team collage: photographic "develop" reveal ----------
          .collage-layer runs a CSS `portraitDrift` transform animation, so we
          only touch opacity and hand it straight back with clearProps. */
-      var collage = document.querySelector(".team-collage");
+      var collage = document.querySelector(".team-collage:not(.team-collage-static)");
       if (collage) {
         var plates = [].concat(
           free(collage.querySelectorAll(".bux-collage-video")),
