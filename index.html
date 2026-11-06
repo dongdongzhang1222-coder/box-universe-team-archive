@@ -5,20 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#9daaf0" />
     <title>BOX UNIVERSE — TEAM ARCHIVE</title>
-    <link rel="preload" as="image" href="./assets/resources/xiaoliao-screen-mobile.png">
-    <script src="./assets/vendor/gsap.min.js"></script>
-    <script src="./assets/vendor/ScrollTrigger.min.js"></script>
-    <script type="module" crossorigin src="./assets/app.js?v=20261106-preview4"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index.css?v=20261106-preview3">
-    <link rel="stylesheet" href="./assets/bux-motion.css?v=20261106-preview3">
-    <link rel="stylesheet" href="./assets/bux-endscreen.css">
-    <link rel="stylesheet" href="./assets/bux-ui.css?v=20261106-preview4">
-    <link rel="stylesheet" href="./assets/cn-features.css?v=20260913-cn14">
+    <link rel="preload" as="image" href="./design/entry.jpg" fetchpriority="high" />
+    <style>
+      html, body { width: 100%; height: 100%; margin: 0; background: #8fa0ef; }
+      .entry-page { position: fixed; inset: 0; overflow: hidden; }
+      .entry-page img { width: 100%; height: 100%; object-fit: contain; }
+      .start-hit { position: absolute; top: 33.5%; left: 31.5%; width: 37%; height: 10.5%; border: 0; background: transparent; cursor: pointer; }
+      .start-hit span { position: absolute; width: 1px; height: 1px; overflow: hidden; }
+      .start-hit:hover, .start-hit:focus-visible { outline: 4px solid #ffffffd9; outline-offset: 3px; filter: drop-shadow(0 0 14px #f8afd2); }
+      @media (max-width: 760px) {
+        .entry-page img { object-fit: cover; }
+        .start-hit { left: 24%; width: 52%; }
+      }
+    </style>
+    <script>
+      if (new URLSearchParams(location.search).get('entered') === '1') {
+        location.replace('./site.html' + location.search + location.hash);
+      }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
-    <script src="./assets/bux-ui.js?v=20261106-preview4" defer></script>
-    <script src="./assets/cn-features.js?v=20260913-cn-entry9" defer></script>
-    <script src="./assets/bux-motion.js?v=20261106-preview3" defer></script>
+    <main class="entry-page">
+      <img src="./design/entry.jpg" alt="BOX UNIVERSE — PRESS START" fetchpriority="high" />
+      <a class="start-hit" href="./site.html?entered=1" aria-label="进入 BOX UNIVERSE"><span>PRESS START</span></a>
+    </main>
+    <script>
+      const artwork = document.querySelector('.entry-page img');
+      const button = document.querySelector('.start-hit');
+      function syncEntryHitbox() {
+        if (!artwork.naturalWidth || !artwork.naturalHeight) return;
+        const width = artwork.clientWidth;
+        const height = artwork.clientHeight;
+        const scale = getComputedStyle(artwork).objectFit === 'cover'
+          ? Math.max(width / artwork.naturalWidth, height / artwork.naturalHeight)
+          : Math.min(width / artwork.naturalWidth, height / artwork.naturalHeight);
+        const offsetX = (width - artwork.naturalWidth * scale) / 2;
+        const offsetY = (height - artwork.naturalHeight * scale) / 2;
+        button.style.left = `${offsetX + 535 * scale}px`;
+        button.style.top = `${offsetY + 318 * scale}px`;
+        button.style.width = `${610 * scale}px`;
+        button.style.height = `${90 * scale}px`;
+      }
+      artwork.addEventListener('load', syncEntryHitbox);
+      if (artwork.complete) syncEntryHitbox();
+      addEventListener('resize', syncEntryHitbox);
+    </script>
   </body>
 </html>

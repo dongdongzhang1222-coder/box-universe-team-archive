@@ -5,6 +5,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const zlib = require('zlib');
 
 const ROOT = __dirname;
 const DATA_DIR = path.join(ROOT, 'data');
@@ -103,13 +104,27 @@ function serveFile(req, res, filename) {
   try { stat = fs.statSync(filename); } catch (_) { return false; }
   if (!stat.isFile()) return false;
   const isUpload = filename.startsWith(UPLOAD_DIR + path.sep);
+  const canUseWebp = !isUpload && /\.(?:png|jpe?g)$/i.test(filename)
+    && /\bimage\/webp\b/i.test(req.headers.accept || '');
+  const webpFilename = canUseWebp ? filename.replace(/\.(?:png|jpe?g)$/i, '.webp') : '';
+  if (webpFilename && fs.existsSync(webpFilename)) {
+    filename = webpFilename;
+    stat = fs.statSync(filename);
+  }
   const detectedType = contentType(filename);
   const type = isUpload && /^(text\/html|text\/javascript)/.test(detectedType)
     ? 'application/octet-stream'
     : detectedType;
   const range = req.headers.range;
-  const noStore = /\.(?:html|js|css)$/i.test(filename);
-  const headers = { 'Content-Type': type, 'Accept-Ranges': 'bytes', 'X-Content-Type-Options': 'nosniff', 'Cache-Control': noStore ? 'no-store' : 'public, max-age=3600' };
+  const isHtml = /\.html$/i.test(filename);
+  const isCode = /\.(?:js|css)$/i.test(filename);
+  const headers = {
+    'Content-Type': type,
+    'Accept-Ranges': 'bytes',
+    'X-Content-Type-Options': 'nosniff',
+    'Cache-Control': isHtml ? 'no-cache' : `public, max-age=${isCode ? 3600 : 86400}`,
+  };
+  if (canUseWebp) headers.Vary = 'Accept';
   if (range) {
     const match = range.match(/bytes=(\d*)-(\d*)/);
     if (match) {
@@ -121,6 +136,14 @@ function serveFile(req, res, filename) {
         return true;
       }
     }
+  }
+  if (/\.(?:html|js|css|json|svg)$/i.test(filename) && /\bgzip\b/i.test(req.headers['accept-encoding'] || '')) {
+    headers['Content-Encoding'] = 'gzip';
+    headers.Vary = headers.Vary ? `${headers.Vary}, Accept-Encoding` : 'Accept-Encoding';
+    delete headers['Accept-Ranges'];
+    res.writeHead(200, headers);
+    fs.createReadStream(filename).pipe(zlib.createGzip()).pipe(res);
+    return true;
   }
   res.writeHead(200, { ...headers, 'Content-Length': stat.size });
   fs.createReadStream(filename).pipe(res);

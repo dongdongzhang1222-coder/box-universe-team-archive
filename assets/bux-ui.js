@@ -57,26 +57,6 @@
   ];
   var STATIC_CASE_ITEMS = [
     {
-      id: 'baby-slip-away',
-      title: '宝贝先开溜',
-      url: 'https://www.digitaling.com/projects/379112.html',
-      members: ['sisi', 'lingxi'],
-      image: './caseboard/baby-slip-away.webp',
-      date: '2026.09',
-      type: '国庆营销 / AI 营销',
-      sortRank: 1
-    },
-    {
-      id: 'mid-autumn-more',
-      title: '宝贝让中秋多一点',
-      url: 'https://www.digitaling.com/projects/379336.html',
-      members: ['sisi', 'lingxi'],
-      image: './caseboard/mid-autumn-more.webp',
-      date: '2026.09',
-      type: '中秋营销 / IP 营销',
-      sortRank: 2
-    },
-    {
       id: 'pet-fair-cuteness',
       title: '亚宠展｜宝贝的可爱，宝贝来宠爱',
       url: 'https://www.digitaling.com/projects/376361.html',
@@ -556,6 +536,9 @@
   }
 
   function optimizeImages() {
+    qa('img[src="./characters/gongning-20261026.png"]').forEach(function (img) {
+      img.src = './characters/gongning-20261026.jpg';
+    });
     qa('.player-orbits img, .case-grid img, .modal-cases img, .collage-layer').forEach(function (img) {
       if (!img.hasAttribute('loading')) img.loading = 'lazy';
       if (!img.hasAttribute('decoding')) img.decoding = 'async';
@@ -624,11 +607,12 @@
   function loadIdeaVideo(video, item) {
     if (!item.parts) {
       video.src = item.src;
-      return;
+      return Promise.resolve();
     }
+    video.removeAttribute('data-bux-media-error');
     video.setAttribute('data-bux-loading', '1');
     var parts = [];
-    item.parts.reduce(function (chain, path) {
+    return item.parts.reduce(function (chain, path) {
       return chain.then(function () {
         return fetch(path).then(function (response) {
           if (!response.ok) throw new Error('Missing video segment: ' + path);
@@ -1032,10 +1016,10 @@
         media = el('video');
         media.controls = true;
         media.playsInline = true;
-        media.preload = 'metadata';
+        media.preload = 'none';
         media.setAttribute('controlsList', 'nodownload noplaybackrate');
         media.setAttribute('aria-label', item.name + ' 视频预览');
-        loadIdeaVideo(media, item);
+        if (!item.parts) loadIdeaVideo(media, item);
       } else {
         media = el('a', 'file-icon bux-doc-preview', item.format);
         media.href = item.src;
@@ -1054,12 +1038,43 @@
 
       var row = el('div');
       if (item.kind === 'video') {
+        var ensureVideo = function () {
+          if (!item.parts) return Promise.resolve();
+          if (!media._buxLoadPromise) {
+            media._buxLoadPromise = loadIdeaVideo(media, item);
+          }
+          return media._buxLoadPromise;
+        };
+        if (item.parts) {
+          var load = el('button', 'bux-idea-open', '加载视频预览');
+          load.type = 'button';
+          load.addEventListener('click', function () {
+            load.disabled = true;
+            load.textContent = '正在加载视频…';
+            ensureVideo().then(function () {
+              if (media.hasAttribute('data-bux-media-error')) {
+                load.disabled = false;
+                load.textContent = '加载失败，重试';
+                media._buxLoadPromise = null;
+              } else {
+                load.remove();
+                media.play().catch(function () {});
+              }
+            });
+          });
+          row.appendChild(load);
+        }
         var fs = el('button', 'bux-idea-fs', '全屏播放');
         fs.type = 'button';
         fs.addEventListener('click', function () {
           var r = media.requestFullscreen || media.webkitRequestFullscreen || media.webkitEnterFullscreen;
           if (r) { try { r.call(media); } catch (_) {} }
-          media.play().catch(function () {});
+          ensureVideo().then(function () {
+            if (!media.hasAttribute('data-bux-media-error')) {
+              if (item.parts) load.remove();
+              media.play().catch(function () {});
+            }
+          });
         });
         row.appendChild(fs);
       } else {
